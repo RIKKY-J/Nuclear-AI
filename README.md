@@ -29,14 +29,14 @@ An advanced, full-stack AI-powered summarization engine designed to distill docu
 
 ---
 
-## 🛠️ Technology Stack
+## 🛠️ Technology Stack (MERN)
 
-* **Fullstack Framework**: [TanStack Start](https://tanstack.com/router/latest/docs/start/overview) (React 19 + Vinxi Bundler + Nitro Server) for seamless server/client transitions and rapid routing.
-* **AI Integration**: [Vercel AI SDK](https://sdk.vercel.ai/) backed by Google Gemini's **gemini-2.5-flash** model.
-* **Styling**: [Tailwind CSS v4](https://tailwindcss.com/) combined with `tw-animate-css` for glassmorphic elements and micro-animations.
-* **State & Routing**: [TanStack Router](https://tanstack.com/router/latest) and [TanStack Query v5](https://tanstack.com/query/latest) for blazing fast routing and data fetching.
-* **Components**: Radix UI Primitives, Lucide Icons, and Framer Motion (`motion/react`).
-* **Validation**: Zod + React Hook Form.
+* **Database**: [MongoDB](https://www.mongodb.com/) for reliable, scalable document storage of summarized history and logs.
+* **Backend Server**: [Express.js](https://expressjs.com/) for constructing secure RESTful APIs to process inputs and manage summaries.
+* **Frontend Interface**: [React](https://react.dev/) to build the responsive, single-page application and manage UI transitions.
+* **Runtime**: [Node.js](https://nodejs.org/) powering the execution of the backend server logic and ecosystem packages.
+* **AI Core**: [Vercel AI SDK](https://sdk.vercel.ai/) backed by Google Gemini's **gemini-2.5-flash** model.
+* **Styling**: [Tailwind CSS](https://tailwindcss.com/) for modern glassmorphic components, fluid grids, and dark-theme aesthetics.
 
 ---
 
