@@ -31,7 +31,6 @@ An advanced, full-stack AI-powered summarization engine designed to distill docu
 
 ## 🛠️ Technology Stack (MERN)
 
-* **Database**: [MongoDB](https://www.mongodb.com/) for reliable, scalable document storage of summarized history and logs.
 * **Backend Server**: [Express.js](https://expressjs.com/) for constructing secure RESTful APIs to process inputs and manage summaries.
 * **Frontend Interface**: [React](https://react.dev/) to build the responsive, single-page application and manage UI transitions.
 * **Runtime**: [Node.js](https://nodejs.org/) powering the execution of the backend server logic and ecosystem packages.
