@@ -115,8 +115,24 @@ function base64ToBytes(b64: string): Uint8Array {
 }
 
 async function fetchYoutubeTranscriptText(id: string): Promise<string> {
-  const list = await YoutubeTranscript.fetchTranscript(id);
-  return list.map((item) => item.text).join(" ");
+  try {
+    const list = await YoutubeTranscript.fetchTranscript(id);
+    return list.map((item) => item.text).join(" ");
+  } catch (err) {
+    console.log(
+      "Primary youtube-transcript failed, trying youtube-transcript.ai fallback... Error:",
+      err instanceof Error ? err.message : err,
+    );
+    const res = await fetch(`https://youtube-transcript.ai/transcript/${id}.txt`);
+    if (!res.ok) {
+      throw new Error(`youtube-transcript.ai returned status ${res.status}`);
+    }
+    const text = await res.text();
+    if (!text.includes("## Transcript") && !text.includes("Transcript:")) {
+      throw new Error("Invalid transcript response content");
+    }
+    return text;
+  }
 }
 
 async function buildUserMessage(
