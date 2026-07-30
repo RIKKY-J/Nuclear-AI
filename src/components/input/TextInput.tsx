@@ -12,11 +12,12 @@ export default function TextInput({
   const isCritical = len >= TEXT_MAX * 0.95 && len <= TEXT_MAX;
   const isWarning = len >= TEXT_MAX * 0.8 && len < TEXT_MAX * 0.95;
 
-  const color = isOver || isCritical
-    ? "text-destructive font-semibold"
-    : isWarning
-      ? "text-amber-500 font-semibold"
-      : "text-muted-foreground";
+  const color =
+    isOver || isCritical
+      ? "text-destructive font-semibold"
+      : isWarning
+        ? "text-amber-500 font-semibold"
+        : "text-muted-foreground";
 
   return (
     <div className="space-y-2">
@@ -29,9 +30,15 @@ export default function TextInput({
       />
       <div className="flex justify-between items-center text-xs">
         <span className="text-muted-foreground flex items-center gap-1.5">
-          <span>Min {TEXT_MIN} · Max {TEXT_MAX.toLocaleString("en-US")} characters</span>
-          {isOver && <span className="text-destructive font-medium">· Character limit exceeded!</span>}
-          {isCritical && <span className="text-destructive font-medium">· Approaching limit (95%+)</span>}
+          <span>
+            Min {TEXT_MIN} · Max {TEXT_MAX.toLocaleString("en-US")} characters
+          </span>
+          {isOver && (
+            <span className="text-destructive font-medium">· Character limit exceeded!</span>
+          )}
+          {isCritical && (
+            <span className="text-destructive font-medium">· Approaching limit (95%+)</span>
+          )}
           {isWarning && <span className="text-amber-500 font-medium">· Nearing limit (80%+)</span>}
         </span>
         <span className={color}>

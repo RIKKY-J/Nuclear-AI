@@ -90,7 +90,11 @@ export default function SourceTabs({
             ) : (
               <span>More</span>
             )}
-            <ChevronDown className={["h-4 w-4 shrink-0 transition-transform", isOpen && "rotate-180"].join(" ")} />
+            <ChevronDown
+              className={["h-4 w-4 shrink-0 transition-transform", isOpen && "rotate-180"].join(
+                " ",
+              )}
+            />
           </button>
 
           {/* Dropdown Menu */}

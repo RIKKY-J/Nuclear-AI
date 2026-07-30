@@ -27,32 +27,48 @@ const SummarySchema = z.object({
   wordCount: z.number(),
   actionItems: z.array(z.string()).optional(),
   openQuestions: z.array(z.string()).optional(),
-  complexity: z.object({
-    language: z.string(),
-    purposeOverview: z.string(),
-    algorithmBreakdown: z.array(z.string()),
-    timeComplexity: z.string(),
-    spaceComplexity: z.string(),
-    dependencies: z.array(z.string()),
-    potentialIssues: z.array(z.string()),
-  }).optional(),
-  repoDetails: z.object({
-    repoName: z.string(),
-    primaryLanguage: z.string(),
-    architectureOverview: z.string(),
-    keyDependencies: z.array(z.string()),
-    setupInstructions: z.string(),
-  }).optional(),
-  studyOutput: z.object({
-    notes: z.array(z.string()).optional(),
-    flashcards: z.array(z.object({ front: z.string(), back: z.string() })).optional(),
-    qa: z.array(z.object({ question: z.string(), answer: z.string() })).optional(),
-  }).optional(),
+  complexity: z
+    .object({
+      language: z.string(),
+      purposeOverview: z.string(),
+      algorithmBreakdown: z.array(z.string()),
+      timeComplexity: z.string(),
+      spaceComplexity: z.string(),
+      dependencies: z.array(z.string()),
+      potentialIssues: z.array(z.string()),
+    })
+    .optional(),
+  repoDetails: z
+    .object({
+      repoName: z.string(),
+      primaryLanguage: z.string(),
+      architectureOverview: z.string(),
+      keyDependencies: z.array(z.string()),
+      setupInstructions: z.string(),
+    })
+    .optional(),
+  studyOutput: z
+    .object({
+      notes: z.array(z.string()).optional(),
+      flashcards: z.array(z.object({ front: z.string(), back: z.string() })).optional(),
+      qa: z.array(z.object({ question: z.string(), answer: z.string() })).optional(),
+    })
+    .optional(),
   coverageNote: z.string().optional(),
 });
 
 export type SummarizeInput = {
-  type: "text" | "website" | "youtube" | "pdf" | "docx" | "txt" | "markdown" | "html" | "github" | "audio";
+  type:
+    | "text"
+    | "website"
+    | "youtube"
+    | "pdf"
+    | "docx"
+    | "txt"
+    | "markdown"
+    | "html"
+    | "github"
+    | "audio";
   text?: string;
   url?: string;
   fileName?: string;
@@ -84,8 +100,7 @@ function extractYoutubeId(url: string): string | null {
 async function fetchWebsiteText(url: string): Promise<string> {
   const res = await fetch(url, {
     headers: {
-      "User-Agent":
-        "Mozilla/5.0 (compatible; NuclearAI/1.0; +https://nuclearai.app)",
+      "User-Agent": "Mozilla/5.0 (compatible; NuclearAI/1.0; +https://nuclearai.app)",
       Accept: "text/html,application/xhtml+xml",
     },
   });
@@ -116,9 +131,7 @@ async function fetchYoutubeContext(url: string): Promise<string> {
     });
     if (pageRes.ok) {
       const html = await pageRes.text();
-      const meta = html.match(
-        /<meta name="description" content="([^"]+)"/,
-      );
+      const meta = html.match(/<meta name="description" content="([^"]+)"/);
       if (meta) description = meta[1];
     }
   } catch {
@@ -198,7 +211,9 @@ async function fetchGithubRepoDetails(url: string) {
   const contentsRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents`);
   if (contentsRes.ok) {
     const contentsData = (await contentsRes.json()) as any[];
-    structure = contentsData.map((f) => `${f.type === "dir" ? "[DIR]" : "[FILE]"} ${f.name}`).join("\n");
+    structure = contentsData
+      .map((f) => `${f.type === "dir" ? "[DIR]" : "[FILE]"} ${f.name}`)
+      .join("\n");
   }
 
   return {
@@ -212,7 +227,11 @@ async function fetchGithubRepoDetails(url: string) {
 
 async function buildUserMessage(
   input: SummarizeInput,
-): Promise<{ message: { role: "user"; content: unknown }; transcriptAvailable?: boolean; coverageNote?: string }> {
+): Promise<{
+  message: { role: "user"; content: unknown };
+  transcriptAvailable?: boolean;
+  coverageNote?: string;
+}> {
   if (input.type === "text") {
     return {
       message: {
@@ -260,7 +279,9 @@ async function buildUserMessage(
         content: `Summarize this YouTube video:\n\n${fullContext}`,
       },
       transcriptAvailable,
-      coverageNote: transcriptAvailable ? undefined : "Metadata-only summary — video transcript unavailable.",
+      coverageNote: transcriptAvailable
+        ? undefined
+        : "Metadata-only summary — video transcript unavailable.",
     };
   }
 
@@ -283,11 +304,7 @@ async function buildUserMessage(
   }
 
   // File-based sources
-  if (
-    input.type === "txt" ||
-    input.type === "markdown" ||
-    input.type === "html"
-  ) {
+  if (input.type === "txt" || input.type === "markdown" || input.type === "html") {
     const raw = new TextDecoder().decode(base64ToBytes(input.dataBase64!));
     const text = input.type === "html" ? stripHtml(raw) : raw;
     return {
@@ -298,9 +315,11 @@ async function buildUserMessage(
     };
   }
   if (input.type === "docx") {
-    const rawText = await mammoth.extractRawText({
-      buffer: Buffer.from(input.dataBase64!, "base64"),
-    }).then((res) => res.value);
+    const rawText = await mammoth
+      .extractRawText({
+        buffer: Buffer.from(input.dataBase64!, "base64"),
+      })
+      .then((res) => res.value);
 
     return {
       message: {
@@ -329,7 +348,10 @@ async function buildUserMessage(
       message: {
         role: "user",
         content: [
-          { type: "text", text: `Transcribe and summarize the attached audio file (${input.fileName}).` },
+          {
+            type: "text",
+            text: `Transcribe and summarize the attached audio file (${input.fileName}).`,
+          },
           {
             type: "file",
             data: `data:${input.mimeType};base64,${input.dataBase64}`,
@@ -479,7 +501,9 @@ ${languagePrompt}`;
 
       if (sessionId) {
         const db = await getDb();
-        const session = db.prepare("SELECT userId FROM sessions WHERE id = ? AND expiresAt > ?").get(sessionId, Date.now()) as any;
+        const session = db
+          .prepare("SELECT userId FROM sessions WHERE id = ? AND expiresAt > ?")
+          .get(sessionId, Date.now()) as any;
         if (session) {
           userId = session.userId;
         }
@@ -488,10 +512,12 @@ ${languagePrompt}`;
       // Save to SQLite database
       const summaryId = `sum_${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const db = await getDb();
-      db.prepare(`
+      db.prepare(
+        `
         INSERT INTO summaries (id, userId, createdAt, preview, input, response, length, sourceType, favorite)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
-      `).run(
+      `,
+      ).run(
         summaryId,
         userId,
         Date.now(),
@@ -604,4 +630,3 @@ export const getPreviewMetadataFn = createServerFn({ method: "POST" })
 
     throw new Error("Invalid type");
   });
-

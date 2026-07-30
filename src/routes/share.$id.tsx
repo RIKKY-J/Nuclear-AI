@@ -66,7 +66,9 @@ function ShareResultPage() {
               </div>
               <div>
                 <div className="text-xs font-semibold text-foreground">Public Shared Link</div>
-                <div className="text-[10px] text-muted-foreground">This is a read-only shared view of this summary</div>
+                <div className="text-[10px] text-muted-foreground">
+                  This is a read-only shared view of this summary
+                </div>
               </div>
             </div>
 
@@ -75,14 +77,21 @@ function ShareResultPage() {
 
               {/* Study Mode View if active */}
               {item.input.mode === "study" && item.response.studyOutput && (
-                <StudyModeCard data={item.response.studyOutput} submode={item.input.studySubmode || "notes"} />
+                <StudyModeCard
+                  data={item.response.studyOutput}
+                  submode={item.input.studySubmode || "notes"}
+                />
               )}
 
               {/* Code Mode analysis if active */}
               {item.input.mode === "code" && item.response.complexity && (
                 <div className="rounded-2xl border border-border bg-panel p-6 space-y-4">
-                  <div className="text-[10px] uppercase tracking-[0.2em] text-primary">Code Logic Analysis</div>
-                  <h3 className="font-semibold text-lg">{item.response.complexity.purposeOverview}</h3>
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-primary">
+                    Code Logic Analysis
+                  </div>
+                  <h3 className="font-semibold text-lg">
+                    {item.response.complexity.purposeOverview}
+                  </h3>
                   <div className="flex flex-wrap gap-2 pt-1">
                     <span className="rounded-md bg-primary/15 text-primary text-xs font-bold px-2 py-1">
                       {item.response.complexity.language}
@@ -97,14 +106,18 @@ function ShareResultPage() {
 
                   {item.response.complexity.algorithmBreakdown?.length > 0 && (
                     <div className="space-y-2 pt-2">
-                      <div className="text-xs font-bold text-muted-foreground uppercase">Algorithm Highlights</div>
+                      <div className="text-xs font-bold text-muted-foreground uppercase">
+                        Algorithm Highlights
+                      </div>
                       <ul className="space-y-2">
-                        {item.response.complexity.algorithmBreakdown.map((algo: string, i: number) => (
-                          <li key={i} className="flex gap-2 items-start text-sm">
-                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                            <span>{algo}</span>
-                          </li>
-                        ))}
+                        {item.response.complexity.algorithmBreakdown.map(
+                          (algo: string, i: number) => (
+                            <li key={i} className="flex gap-2 items-start text-sm">
+                              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                              <span>{algo}</span>
+                            </li>
+                          ),
+                        )}
                       </ul>
                     </div>
                   )}
@@ -114,16 +127,25 @@ function ShareResultPage() {
               {/* GitHub Repo Details if active */}
               {item.input.type === "github" && item.response.repoDetails && (
                 <div className="rounded-2xl border border-border bg-panel p-6 space-y-4">
-                  <div className="text-[10px] uppercase tracking-[0.2em] text-primary">GitHub Repository Overview</div>
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-primary">
+                    GitHub Repository Overview
+                  </div>
                   <h3 className="font-semibold text-lg">{item.response.repoDetails.repoName}</h3>
-                  <p className="text-sm leading-relaxed text-muted-foreground">{item.response.repoDetails.architectureOverview}</p>
-                  
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    {item.response.repoDetails.architectureOverview}
+                  </p>
+
                   {item.response.repoDetails.keyDependencies?.length > 0 && (
                     <div className="space-y-1.5">
-                      <div className="text-xs font-bold text-muted-foreground uppercase">Dependencies</div>
+                      <div className="text-xs font-bold text-muted-foreground uppercase">
+                        Dependencies
+                      </div>
                       <div className="flex flex-wrap gap-1.5">
                         {item.response.repoDetails.keyDependencies.map((dep: string, i: number) => (
-                          <span key={i} className="bg-panel border border-border rounded-lg text-xs font-medium px-2 py-1">
+                          <span
+                            key={i}
+                            className="bg-panel border border-border rounded-lg text-xs font-medium px-2 py-1"
+                          >
                             {dep}
                           </span>
                         ))}
@@ -133,7 +155,9 @@ function ShareResultPage() {
 
                   {item.response.repoDetails.setupInstructions && (
                     <div className="space-y-1.5 pt-2">
-                      <div className="text-xs font-bold text-muted-foreground uppercase">Setup & Run</div>
+                      <div className="text-xs font-bold text-muted-foreground uppercase">
+                        Setup & Run
+                      </div>
                       <pre className="p-3 bg-background border border-border rounded-xl text-xs overflow-x-auto font-mono text-muted-foreground leading-relaxed whitespace-pre-wrap">
                         {item.response.repoDetails.setupInstructions}
                       </pre>
@@ -142,12 +166,16 @@ function ShareResultPage() {
                 </div>
               )}
 
-              {item.response.keyPoints?.length > 0 && <KeyPoints points={item.response.keyPoints} />}
+              {item.response.keyPoints?.length > 0 && (
+                <KeyPoints points={item.response.keyPoints} />
+              )}
 
               {/* Action Items */}
               {item.response.actionItems && item.response.actionItems.length > 0 && (
                 <div className="rounded-2xl border border-border bg-panel p-6">
-                  <div className="text-[10px] uppercase tracking-[0.2em] text-primary mb-3">Action Items</div>
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-primary mb-3">
+                    Action Items
+                  </div>
                   <ul className="space-y-2">
                     {item.response.actionItems.map((ai: string, i: number) => (
                       <li key={i} className="flex items-start gap-2.5 text-sm leading-relaxed">
@@ -162,10 +190,15 @@ function ShareResultPage() {
               {/* Open Questions */}
               {item.response.openQuestions && item.response.openQuestions.length > 0 && (
                 <div className="rounded-2xl border border-border bg-panel p-6">
-                  <div className="text-[10px] uppercase tracking-[0.2em] text-amber-500 mb-3">Open Questions & Gaps</div>
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-amber-500 mb-3">
+                    Open Questions & Gaps
+                  </div>
                   <ul className="space-y-2">
                     {item.response.openQuestions.map((oq: string, i: number) => (
-                      <li key={i} className="flex items-start gap-2.5 text-sm leading-relaxed text-muted-foreground">
+                      <li
+                        key={i}
+                        className="flex items-start gap-2.5 text-sm leading-relaxed text-muted-foreground"
+                      >
                         <span className="text-amber-500 font-bold">?</span>
                         <span>{oq}</span>
                       </li>

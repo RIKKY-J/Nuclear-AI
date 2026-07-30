@@ -20,7 +20,13 @@ export default function UrlInput({
         type="url"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={isYt ? "https://youtu.be/…" : isGit ? "https://github.com/owner/repo" : "https://example.com"}
+        placeholder={
+          isYt
+            ? "https://youtu.be/…"
+            : isGit
+              ? "https://github.com/owner/repo"
+              : "https://example.com"
+        }
         inputMode="url"
         autoComplete="off"
         className="w-full rounded-xl border border-border bg-panel/60 pl-10 pr-4 py-3 text-sm placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"

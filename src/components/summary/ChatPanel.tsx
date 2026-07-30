@@ -106,7 +106,8 @@ export default function ChatPanel({
             </div>
             <h5 className="font-semibold text-sm">Ask a question</h5>
             <p className="text-xs max-w-xs mt-1 text-muted-foreground/80">
-              Type a question below to query specific points, clarify details, or extract definitions from the document.
+              Type a question below to query specific points, clarify details, or extract
+              definitions from the document.
             </p>
           </div>
         ) : (
@@ -143,7 +144,10 @@ export default function ChatPanel({
       </div>
 
       {/* Input Form */}
-      <form onSubmit={handleSend} className="border-t border-border p-3 bg-background/30 flex gap-2">
+      <form
+        onSubmit={handleSend}
+        className="border-t border-border p-3 bg-background/30 flex gap-2"
+      >
         <input
           type="text"
           value={inputMsg}

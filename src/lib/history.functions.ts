@@ -22,29 +22,32 @@ async function getUserIdFromSession(): Promise<string | null> {
   if (!sessionId) return null;
 
   const db = await getDb();
-  const session = db.prepare("SELECT userId FROM sessions WHERE id = ? AND expiresAt > ?").get(sessionId, Date.now()) as any;
+  const session = db
+    .prepare("SELECT userId FROM sessions WHERE id = ? AND expiresAt > ?")
+    .get(sessionId, Date.now()) as any;
   return session ? session.userId : null;
 }
 
-export const getHistoryListFn = createServerFn({ method: "GET" })
-  .handler(async () => {
-    const userId = await getUserIdFromSession();
-    if (!userId) return [];
+export const getHistoryListFn = createServerFn({ method: "GET" }).handler(async () => {
+  const userId = await getUserIdFromSession();
+  if (!userId) return [];
 
-    const db = await getDb();
-    const rows = db.prepare("SELECT * FROM summaries WHERE userId = ? ORDER BY createdAt DESC").all(userId) as any[];
+  const db = await getDb();
+  const rows = db
+    .prepare("SELECT * FROM summaries WHERE userId = ? ORDER BY createdAt DESC")
+    .all(userId) as any[];
 
-    return rows.map((row) => ({
-      id: row.id,
-      createdAt: row.createdAt,
-      preview: row.preview,
-      length: row.length,
-      sourceType: row.sourceType,
-      favorite: row.favorite === 1,
-      input: JSON.parse(row.input),
-      response: JSON.parse(row.response),
-    }));
-  });
+  return rows.map((row) => ({
+    id: row.id,
+    createdAt: row.createdAt,
+    preview: row.preview,
+    length: row.length,
+    sourceType: row.sourceType,
+    favorite: row.favorite === 1,
+    input: JSON.parse(row.input),
+    response: JSON.parse(row.response),
+  }));
+});
 
 export const toggleFavoriteFn = createServerFn({ method: "POST" })
   .input(z.object({ id: z.string() }))
@@ -66,15 +69,14 @@ export const deleteSummaryFn = createServerFn({ method: "POST" })
     return { success: true };
   });
 
-export const clearUserHistoryFn = createServerFn({ method: "POST" })
-  .handler(async () => {
-    const userId = await getUserIdFromSession();
-    if (!userId) return { success: false };
+export const clearUserHistoryFn = createServerFn({ method: "POST" }).handler(async () => {
+  const userId = await getUserIdFromSession();
+  if (!userId) return { success: false };
 
-    const db = await getDb();
-    db.prepare("DELETE FROM summaries WHERE userId = ?").run(userId);
-    return { success: true };
-  });
+  const db = await getDb();
+  db.prepare("DELETE FROM summaries WHERE userId = ?").run(userId);
+  return { success: true };
+});
 
 export const syncAnonymousHistoryFn = createServerFn({ method: "POST" })
   .input(z.object({ ids: z.array(z.string()) }))
@@ -84,11 +86,13 @@ export const syncAnonymousHistoryFn = createServerFn({ method: "POST" })
 
     const db = await getDb();
     const placeholders = input.ids.map(() => "?").join(",");
-    db.prepare(`
+    db.prepare(
+      `
       UPDATE summaries 
       SET userId = ? 
       WHERE id IN (${placeholders}) AND userId IS NULL
-    `).run(userId, ...input.ids);
+    `,
+    ).run(userId, ...input.ids);
 
     return { success: true };
   });
@@ -121,4 +125,3 @@ export const updateSummaryResponseFn = createServerFn({ method: "POST" })
     );
     return { success: true };
   });
-

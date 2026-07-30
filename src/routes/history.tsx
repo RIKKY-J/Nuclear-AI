@@ -1,12 +1,27 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Clock, FileText, Trash2, Heart, Search, Filter, ArrowUpDown } from "lucide-react";
+import {
+  ArrowLeft,
+  Clock,
+  FileText,
+  Trash2,
+  Heart,
+  Search,
+  Filter,
+  ArrowUpDown,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { getHistoryListFn, toggleFavoriteFn, deleteSummaryFn, clearUserHistoryFn, syncAnonymousHistoryFn } from "@/lib/history.functions";
+import {
+  getHistoryListFn,
+  toggleFavoriteFn,
+  deleteSummaryFn,
+  clearUserHistoryFn,
+  syncAnonymousHistoryFn,
+} from "@/lib/history.functions";
 import { getCurrentUserFn } from "@/lib/auth.functions";
 import { type HistoryItem } from "@/lib/history";
 
@@ -39,7 +54,7 @@ const FILTER_SOURCES = [
 function HistoryPage() {
   const [items, setItems] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ id: string; email: string } | null>(null);
 
   // Filter/Sort States
   const [searchQuery, setSearchQuery] = useState("");
@@ -65,7 +80,7 @@ function HistoryPage() {
           }
         }
         const serverItems = await getHistoryListFn();
-        setItems(serverItems as any[]);
+        setItems(serverItems as HistoryItem[]);
       } else {
         const localRaw = sessionStorage.getItem("nuclear:history");
         const localItems = localRaw ? (JSON.parse(localRaw) as HistoryItem[]) : [];
@@ -88,9 +103,7 @@ function HistoryPage() {
     e.stopPropagation();
     try {
       const { favorite } = await toggleFavoriteFn({ id });
-      setItems((prev) =>
-        prev.map((item) => (item.id === id ? { ...item, favorite } : item)),
-      );
+      setItems((prev) => prev.map((item) => (item.id === id ? { ...item, favorite } : item)));
       toast.success(favorite ? "Added to favorites" : "Removed from favorites");
     } catch {
       toast.error("Could not toggle favorite");
@@ -108,7 +121,10 @@ function HistoryPage() {
         const localRaw = sessionStorage.getItem("nuclear:history");
         if (localRaw) {
           const localItems = JSON.parse(localRaw) as HistoryItem[];
-          sessionStorage.setItem("nuclear:history", JSON.stringify(localItems.filter((x) => x.id !== id)));
+          sessionStorage.setItem(
+            "nuclear:history",
+            JSON.stringify(localItems.filter((x) => x.id !== id)),
+          );
         }
       }
       toast.success("Summary deleted");
@@ -118,7 +134,8 @@ function HistoryPage() {
   };
 
   const handleClearAll = async () => {
-    if (!window.confirm("Are you sure you want to clear all history? This cannot be undone.")) return;
+    if (!window.confirm("Are you sure you want to clear all history? This cannot be undone."))
+      return;
 
     try {
       await clearUserHistoryFn();
@@ -224,11 +241,15 @@ function HistoryPage() {
                     <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
                     <select
                       value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value as any)}
+                      onChange={(e) => setSortBy(e.target.value as "date" | "wordCount")}
                       className="bg-transparent text-foreground focus:outline-none cursor-pointer font-semibold"
                     >
-                      <option value="date" className="bg-panel">Sort: Newest</option>
-                      <option value="wordCount" className="bg-panel">Sort: Word Count</option>
+                      <option value="date" className="bg-panel">
+                        Sort: Newest
+                      </option>
+                      <option value="wordCount" className="bg-panel">
+                        Sort: Word Count
+                      </option>
                     </select>
                   </div>
 
@@ -242,7 +263,9 @@ function HistoryPage() {
                         : "border-border bg-background text-muted-foreground hover:text-foreground",
                     ].join(" ")}
                   >
-                    <Heart className={["h-3.5 w-3.5", showOnlyFavorites && "fill-primary"].join(" ")} />
+                    <Heart
+                      className={["h-3.5 w-3.5", showOnlyFavorites && "fill-primary"].join(" ")}
+                    />
                     <span>Favorites</span>
                   </button>
                 </div>
@@ -297,7 +320,8 @@ function HistoryPage() {
                             {sType}
                             <span className="text-muted-foreground normal-case tracking-normal">
                               · {timeAgo(item.createdAt)}
-                              {item.response.wordCount > 0 && ` · ${item.response.wordCount.toLocaleString()} words`}
+                              {item.response.wordCount > 0 &&
+                                ` · ${item.response.wordCount.toLocaleString()} words`}
                             </span>
                           </div>
                           <div className="mt-1 font-display text-lg font-semibold truncate pr-16">
@@ -315,10 +339,14 @@ function HistoryPage() {
                             aria-label="Favorite"
                             className={[
                               "p-2 rounded-lg border border-border hover:bg-accent transition-colors shrink-0",
-                              item.favorite ? "text-red-500 border-red-500/25 bg-red-500/5" : "text-muted-foreground",
+                              item.favorite
+                                ? "text-red-500 border-red-500/25 bg-red-500/5"
+                                : "text-muted-foreground",
                             ].join(" ")}
                           >
-                            <Heart className={["h-3.5 w-3.5", item.favorite && "fill-red-500"].join(" ")} />
+                            <Heart
+                              className={["h-3.5 w-3.5", item.favorite && "fill-red-500"].join(" ")}
+                            />
                           </button>
 
                           {/* Delete button */}

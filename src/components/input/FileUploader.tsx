@@ -83,7 +83,7 @@ export default function FileUploader({
         }}
       />
       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-        <UploadCloud className="h-6 w-6 animate-bounce" style={{ animationDuration: '3s' }} />
+        <UploadCloud className="h-6 w-6 animate-bounce" style={{ animationDuration: "3s" }} />
       </div>
       <div>
         <div className="font-medium">Drop your {source.label} file here</div>

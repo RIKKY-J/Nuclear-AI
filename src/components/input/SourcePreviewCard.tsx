@@ -32,9 +32,14 @@ export default function SourcePreviewCard({ data }: { data: PreviewData }) {
           </div>
         ) : data.type === "website" && data.favicon ? (
           <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-panel/80 border border-border text-foreground">
-            <img src={data.favicon} alt={data.title} className="h-6 w-6 rounded-sm" onError={(e) => {
-              (e.target as HTMLElement).style.display = 'none';
-            }} />
+            <img
+              src={data.favicon}
+              alt={data.title}
+              className="h-6 w-6 rounded-sm"
+              onError={(e) => {
+                (e.target as HTMLElement).style.display = "none";
+              }}
+            />
             <Globe className="h-5 w-5 text-primary absolute" />
           </div>
         ) : data.type === "github" ? (
@@ -89,9 +94,7 @@ export default function SourcePreviewCard({ data }: { data: PreviewData }) {
           )}
 
           {data.type === "file" && data.fileSize !== undefined && (
-            <p className="text-xs text-muted-foreground">
-              Size: {formatBytes(data.fileSize)}
-            </p>
+            <p className="text-xs text-muted-foreground">Size: {formatBytes(data.fileSize)}</p>
           )}
         </div>
       </div>

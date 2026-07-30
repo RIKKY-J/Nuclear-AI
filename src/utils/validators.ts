@@ -26,7 +26,8 @@ export function validateText(value: string): string | null {
   const len = value.trim().length;
   if (len === 0) return "Please paste some text to summarize.";
   if (len < TEXT_MIN) return `Text is too short (min ${TEXT_MIN} characters).`;
-  if (len > TEXT_MAX) return `Text is too long (max ${TEXT_MAX.toLocaleString("en-US")} characters).`;
+  if (len > TEXT_MAX)
+    return `Text is too long (max ${TEXT_MAX.toLocaleString("en-US")} characters).`;
   return null;
 }
 

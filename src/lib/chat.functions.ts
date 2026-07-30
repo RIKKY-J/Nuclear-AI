@@ -8,7 +8,9 @@ export const getChatHistoryFn = createServerFn({ method: "GET" })
   .handler(async ({ input }) => {
     const db = await getDb();
     const rows = db
-      .prepare("SELECT role, content, createdAt FROM chats WHERE summaryId = ? ORDER BY createdAt ASC")
+      .prepare(
+        "SELECT role, content, createdAt FROM chats WHERE summaryId = ? ORDER BY createdAt ASC",
+      )
       .all(input.summaryId) as any[];
 
     return rows.map((row) => ({
@@ -80,21 +82,13 @@ ${groundingText}
     const assistantMsgId = `msg_${Date.now() + 1}-${Math.random().toString(36).slice(2, 6)}`;
 
     // Save to Database
-    db.prepare("INSERT INTO chats (id, summaryId, role, content, createdAt) VALUES (?, ?, ?, ?, ?)").run(
-      userMsgId,
-      summaryId,
-      "user",
-      message,
-      Date.now(),
-    );
+    db.prepare(
+      "INSERT INTO chats (id, summaryId, role, content, createdAt) VALUES (?, ?, ?, ?, ?)",
+    ).run(userMsgId, summaryId, "user", message, Date.now());
 
-    db.prepare("INSERT INTO chats (id, summaryId, role, content, createdAt) VALUES (?, ?, ?, ?, ?)").run(
-      assistantMsgId,
-      summaryId,
-      "assistant",
-      text,
-      Date.now() + 10,
-    );
+    db.prepare(
+      "INSERT INTO chats (id, summaryId, role, content, createdAt) VALUES (?, ?, ?, ?, ?)",
+    ).run(assistantMsgId, summaryId, "assistant", text, Date.now() + 10);
 
     return {
       role: "assistant" as const,

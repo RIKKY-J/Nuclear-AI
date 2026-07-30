@@ -40,7 +40,11 @@ export default function ProgressStepper({
                   <div
                     className={[
                       "text-xs font-semibold",
-                      isActive ? "text-foreground" : isCompleted ? "text-muted-foreground" : "text-muted-foreground/60",
+                      isActive
+                        ? "text-foreground"
+                        : isCompleted
+                          ? "text-muted-foreground"
+                          : "text-muted-foreground/60",
                     ].join(" ")}
                   >
                     {step.label}

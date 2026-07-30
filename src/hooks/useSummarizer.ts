@@ -3,12 +3,7 @@ import { toast } from "sonner";
 import { summarize, type SummarizePayload, type SummaryResponse } from "@/services/api";
 import { SOURCES, type SourceType } from "@/utils/constants";
 import type { SummarizeInput } from "@/lib/summarize.functions";
-import {
-  validateFile,
-  validateText,
-  validateUrl,
-  validateYouTubeUrl,
-} from "@/utils/validators";
+import { validateFile, validateText, validateUrl, validateYouTubeUrl } from "@/utils/validators";
 
 type Status = "idle" | "loading" | "success" | "error";
 
@@ -54,78 +49,93 @@ export function useSummarizer() {
     return !!file;
   })();
 
-  const submit = useCallback(async (
-    length: "short" | "medium" | "detailed" = "medium",
-  ): Promise<{ id: string; response: SummaryResponse; input: SummarizeInput } | null> => {
-    const cfg = SOURCES.find((s) => s.id === source)!;
-    let payload: SummarizePayload | null = null;
-    let vErr: string | null = null;
+  const submit = useCallback(
+    async (
+      length: "short" | "medium" | "detailed" = "medium",
+    ): Promise<{ id: string; response: SummaryResponse; input: SummarizeInput } | null> => {
+      const cfg = SOURCES.find((s) => s.id === source)!;
+      let payload: SummarizePayload | null = null;
+      let vErr: string | null = null;
 
-    if (cfg.kind === "text") {
-      vErr = validateText(text);
-      if (!vErr) payload = { type: "text", text: text.trim() };
-    } else if (cfg.id === "github") {
-      if (!websiteUrl.toLowerCase().includes("github.com")) {
-        vErr = "Please enter a valid GitHub repository URL.";
-      } else {
+      if (cfg.kind === "text") {
+        vErr = validateText(text);
+        if (!vErr) payload = { type: "text", text: text.trim() };
+      } else if (cfg.id === "github") {
+        if (!websiteUrl.toLowerCase().includes("github.com")) {
+          vErr = "Please enter a valid GitHub repository URL.";
+        } else {
+          vErr = validateUrl(websiteUrl);
+        }
+        if (!vErr) payload = { type: "github", url: websiteUrl.trim() };
+      } else if (cfg.kind === "url") {
         vErr = validateUrl(websiteUrl);
+        if (!vErr) payload = { type: "website", url: websiteUrl.trim() };
+      } else if (cfg.kind === "youtube") {
+        vErr = validateYouTubeUrl(youtubeUrl);
+        if (!vErr) payload = { type: "youtube", url: youtubeUrl.trim() };
+      } else if (cfg.kind === "file") {
+        if (!file) {
+          vErr = "Please choose a file to upload.";
+        } else {
+          vErr = validateFile(file, cfg);
+        }
+        if (!vErr && file) {
+          payload = { type: cfg.id as any, file };
+        }
       }
-      if (!vErr) payload = { type: "github", url: websiteUrl.trim() };
-    } else if (cfg.kind === "url") {
-      vErr = validateUrl(websiteUrl);
-      if (!vErr) payload = { type: "website", url: websiteUrl.trim() };
-    } else if (cfg.kind === "youtube") {
-      vErr = validateYouTubeUrl(youtubeUrl);
-      if (!vErr) payload = { type: "youtube", url: youtubeUrl.trim() };
-    } else if (cfg.kind === "file") {
-      if (!file) {
-        vErr = "Please choose a file to upload.";
-      } else {
-        vErr = validateFile(file, cfg);
-      }
-      if (!vErr && file) {
-        payload = { type: cfg.id as any, file };
-      }
-    }
 
-    if (vErr || !payload) {
-      setError(vErr);
-      toast.error(vErr ?? "Invalid input");
-      return null;
-    }
+      if (vErr || !payload) {
+        setError(vErr);
+        toast.error(vErr ?? "Invalid input");
+        return null;
+      }
 
-    setError(null);
-    setResult(null);
-    setStatus("loading");
-    try {
-      const data = await summarize(payload, length, {
-        mode,
-        studySubmode,
-        customLens: customLens.trim() || undefined,
-      });
-      setResult(data.response);
-      setStatus("success");
-      toast.success("Summary ready");
-      return data;
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Something went wrong. Please try again.";
-      setError(msg);
-      setStatus("error");
-      toast.error(msg);
-      return null;
-    }
-  }, [source, text, websiteUrl, youtubeUrl, file, mode, studySubmode, customLens]);
+      setError(null);
+      setResult(null);
+      setStatus("loading");
+      try {
+        const data = await summarize(payload, length, {
+          mode,
+          studySubmode,
+          customLens: customLens.trim() || undefined,
+        });
+        setResult(data.response);
+        setStatus("success");
+        toast.success("Summary ready");
+        return data;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Something went wrong. Please try again.";
+        setError(msg);
+        setStatus("error");
+        toast.error(msg);
+        return null;
+      }
+    },
+    [source, text, websiteUrl, youtubeUrl, file, mode, studySubmode, customLens],
+  );
 
   return {
-    source, changeSource,
-    text, setText,
-    websiteUrl, setWebsiteUrl,
-    youtubeUrl, setYoutubeUrl,
-    file, setFile,
-    status, result, error,
-    canSubmit, submit, clear,
-    mode, setMode,
-    studySubmode, setStudySubmode,
-    customLens, setCustomLens,
+    source,
+    changeSource,
+    text,
+    setText,
+    websiteUrl,
+    setWebsiteUrl,
+    youtubeUrl,
+    setYoutubeUrl,
+    file,
+    setFile,
+    status,
+    result,
+    error,
+    canSubmit,
+    submit,
+    clear,
+    mode,
+    setMode,
+    studySubmode,
+    setStudySubmode,
+    customLens,
+    setCustomLens,
   };
 }

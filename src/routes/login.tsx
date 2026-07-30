@@ -104,7 +104,8 @@ function LoginPage() {
                 <div className="space-y-2">
                   <h2 className="font-display text-2xl font-bold">Check your inbox</h2>
                   <p className="text-sm text-muted-foreground">
-                    We've sent a magic link to <strong className="text-foreground">{sentTo}</strong>.
+                    We've sent a magic link to <strong className="text-foreground">{sentTo}</strong>
+                    .
                   </p>
                 </div>
                 <div className="p-4 rounded-lg bg-panel/60 border border-border text-left text-xs space-y-2">
@@ -113,7 +114,8 @@ function LoginPage() {
                     <span className="font-semibold">Local Development Notice</span>
                   </div>
                   <p className="text-muted-foreground leading-relaxed">
-                    Check your **IDE/Terminal console output** to click the generated magic link directly!
+                    Check your **IDE/Terminal console output** to click the generated magic link
+                    directly!
                   </p>
                 </div>
                 <button
@@ -144,7 +146,10 @@ function LoginPage() {
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <label htmlFor="email" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    <label
+                      htmlFor="email"
+                      className="text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+                    >
                       Email Address
                     </label>
                     <div className="relative">

@@ -91,7 +91,8 @@ function Home() {
             <br /> in seconds.
           </h1>
           <p className="mt-4 mx-auto max-w-xl text-base sm:text-lg text-muted-foreground">
-            Turn code repositories, documents, audio recordings, websites, and videos into clear, structured summaries.
+            Turn code repositories, documents, audio recordings, websites, and videos into clear,
+            structured summaries.
           </p>
         </div>
       </section>
@@ -99,7 +100,6 @@ function Home() {
       {/* Main Form */}
       <main className="relative mx-auto w-full max-w-4xl flex-1 px-4 sm:px-6 pb-16">
         <section className="space-y-4 rounded-2xl border border-border bg-panel/40 p-5 sm:p-6 backdrop-blur">
-          
           {/* Stepper only during active loading */}
           {s.status === "loading" && <ProgressStepper currentStage={currentStage} />}
 
@@ -110,7 +110,11 @@ function Home() {
             </div>
           ) : (
             <>
-              <SourceTabs value={s.source} onChange={s.changeSource} disabled={s.status === "loading"} />
+              <SourceTabs
+                value={s.source}
+                onChange={s.changeSource}
+                disabled={s.status === "loading"}
+              />
 
               <AnimatePresence mode="wait">
                 <motion.div
@@ -147,7 +151,12 @@ function Home() {
                     <Settings2 className="h-3.5 w-3.5" />
                     <span>Advanced Customizations</span>
                   </div>
-                  <ChevronDown className={["h-3.5 w-3.5 transition-transform", showAdvanced && "rotate-180"].join(" ")} />
+                  <ChevronDown
+                    className={[
+                      "h-3.5 w-3.5 transition-transform",
+                      showAdvanced && "rotate-180",
+                    ].join(" ")}
+                  />
                 </button>
 
                 {showAdvanced && (
@@ -172,11 +181,13 @@ function Home() {
                         AI Output Mode
                       </label>
                       <div className="flex flex-wrap gap-2">
-                        {([
-                          { id: "standard", label: "Standard", icon: FileText },
-                          { id: "study", label: "Study Mode", icon: BookOpen },
-                          { id: "code", label: "Code Mode", icon: Code },
-                        ] as const).map((m) => {
+                        {(
+                          [
+                            { id: "standard", label: "Standard", icon: FileText },
+                            { id: "study", label: "Study Mode", icon: BookOpen },
+                            { id: "code", label: "Code Mode", icon: Code },
+                          ] as const
+                        ).map((m) => {
                           const Icon = m.icon;
                           const active = s.mode === m.id;
                           return (

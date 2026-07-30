@@ -38,9 +38,12 @@ export const sendMagicLinkFn = createServerFn({ method: "POST" })
     const token = `token_${Math.random().toString(36).slice(2, 10)}${Math.random().toString(36).slice(2, 10)}`;
     const expiresAt = Date.now() + 15 * 60 * 1000; // 15 mins
 
-    db.prepare(
-      "INSERT INTO sessions (id, userId, expiresAt, createdAt) VALUES (?, ?, ?, ?)",
-    ).run(token, user.id, expiresAt, Date.now());
+    db.prepare("INSERT INTO sessions (id, userId, expiresAt, createdAt) VALUES (?, ?, ?, ?)").run(
+      token,
+      user.id,
+      expiresAt,
+      Date.now(),
+    );
 
     // 3. Log to console for development / ease of testing
     console.log("\n==================================================");
@@ -72,9 +75,12 @@ export const loginWithTokenFn = createServerFn({ method: "POST" })
     const newSessionId = `sess_${Math.random().toString(36).slice(2, 15)}`;
     const expiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days
 
-    db.prepare(
-      "INSERT INTO sessions (id, userId, expiresAt, createdAt) VALUES (?, ?, ?, ?)",
-    ).run(newSessionId, session.userId, expiresAt, Date.now());
+    db.prepare("INSERT INTO sessions (id, userId, expiresAt, createdAt) VALUES (?, ?, ?, ?)").run(
+      newSessionId,
+      session.userId,
+      expiresAt,
+      Date.now(),
+    );
 
     // Delete the verification token session
     db.prepare("DELETE FROM sessions WHERE id = ?").run(token);
@@ -87,42 +93,40 @@ export const loginWithTokenFn = createServerFn({ method: "POST" })
     return { success: true };
   });
 
-export const getCurrentUserFn = createServerFn({ method: "GET" })
-  .handler(async () => {
-    const req = getRequest();
-    const cookies = parseCookies(req);
-    const sessionId = cookies["session_id"];
+export const getCurrentUserFn = createServerFn({ method: "GET" }).handler(async () => {
+  const req = getRequest();
+  const cookies = parseCookies(req);
+  const sessionId = cookies["session_id"];
 
-    if (!sessionId) return null;
+  if (!sessionId) return null;
 
-    const db = await getDb();
-    const session = db.prepare("SELECT * FROM sessions WHERE id = ?").get(sessionId) as any;
+  const db = await getDb();
+  const session = db.prepare("SELECT * FROM sessions WHERE id = ?").get(sessionId) as any;
 
-    if (!session || session.expiresAt < Date.now()) {
-      if (session) {
-        db.prepare("DELETE FROM sessions WHERE id = ?").run(sessionId);
-      }
-      return null;
-    }
-
-    const user = db.prepare("SELECT id, email FROM users WHERE id = ?").get(session.userId) as any;
-    return user || null;
-  });
-
-export const logoutFn = createServerFn({ method: "POST" })
-  .handler(async () => {
-    const req = getRequest();
-    const cookies = parseCookies(req);
-    const sessionId = cookies["session_id"];
-
-    if (sessionId) {
-      const db = await getDb();
+  if (!session || session.expiresAt < Date.now()) {
+    if (session) {
       db.prepare("DELETE FROM sessions WHERE id = ?").run(sessionId);
     }
+    return null;
+  }
 
-    // Clear the cookie
-    const cookieString = `session_id=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
-    setResponseHeader("Set-Cookie", cookieString);
+  const user = db.prepare("SELECT id, email FROM users WHERE id = ?").get(session.userId) as any;
+  return user || null;
+});
 
-    return { success: true };
-  });
+export const logoutFn = createServerFn({ method: "POST" }).handler(async () => {
+  const req = getRequest();
+  const cookies = parseCookies(req);
+  const sessionId = cookies["session_id"];
+
+  if (sessionId) {
+    const db = await getDb();
+    db.prepare("DELETE FROM sessions WHERE id = ?").run(sessionId);
+  }
+
+  // Clear the cookie
+  const cookieString = `session_id=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
+  setResponseHeader("Set-Cookie", cookieString);
+
+  return { success: true };
+});

@@ -78,14 +78,19 @@ export default function StudyModeCard({
           {data.notes && data.notes.length > 0 ? (
             <ul className="space-y-3.5">
               {data.notes.map((note, idx) => (
-                <li key={idx} className="flex items-start gap-3 text-[15px] leading-relaxed text-foreground/90">
+                <li
+                  key={idx}
+                  className="flex items-start gap-3 text-[15px] leading-relaxed text-foreground/90"
+                >
                   <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
                   <span className="whitespace-pre-line">{note}</span>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-muted-foreground">No study notes generated. Switch submodes or try again.</p>
+            <p className="text-sm text-muted-foreground">
+              No study notes generated. Switch submodes or try again.
+            </p>
           )}
         </div>
       )}
@@ -108,20 +113,28 @@ export default function StudyModeCard({
                 >
                   {/* Card Front */}
                   <div className="absolute inset-0 w-full h-full backface-hidden flex flex-col items-center justify-center p-6 text-center bg-panel/40 rounded-2xl">
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground/60 mb-2">Question / Concept</div>
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground/60 mb-2">
+                      Question / Concept
+                    </div>
                     <p className="font-display text-base sm:text-lg font-semibold text-foreground leading-snug">
                       {data.flashcards[activeCardIdx]?.front}
                     </p>
-                    <span className="absolute bottom-4 text-[10px] text-primary/70 font-semibold uppercase tracking-widest">Click to Flip</span>
+                    <span className="absolute bottom-4 text-[10px] text-primary/70 font-semibold uppercase tracking-widest">
+                      Click to Flip
+                    </span>
                   </div>
 
                   {/* Card Back */}
                   <div className="absolute inset-0 w-full h-full backface-hidden rotate-y-180 flex flex-col items-center justify-center p-6 text-center bg-primary/10 rounded-2xl border border-primary/20">
-                    <div className="text-[10px] uppercase tracking-wider text-primary/75 mb-2">Answer / Explanation</div>
+                    <div className="text-[10px] uppercase tracking-wider text-primary/75 mb-2">
+                      Answer / Explanation
+                    </div>
                     <p className="text-sm sm:text-base text-foreground leading-relaxed">
                       {data.flashcards[activeCardIdx]?.back}
                     </p>
-                    <span className="absolute bottom-4 text-[10px] text-muted-foreground/60 font-semibold uppercase tracking-widest">Click to Flip</span>
+                    <span className="absolute bottom-4 text-[10px] text-muted-foreground/60 font-semibold uppercase tracking-widest">
+                      Click to Flip
+                    </span>
                   </div>
                 </div>
               </div>
@@ -146,7 +159,9 @@ export default function StudyModeCard({
               </div>
             </>
           ) : (
-            <p className="text-sm text-muted-foreground">No flashcards generated. Switch submodes or try again.</p>
+            <p className="text-sm text-muted-foreground">
+              No flashcards generated. Switch submodes or try again.
+            </p>
           )}
         </div>
       )}
@@ -164,7 +179,9 @@ export default function StudyModeCard({
                       onClick={() => toggleQa(idx)}
                       className="w-full flex items-start justify-between gap-3 text-left font-display font-semibold text-sm sm:text-base text-foreground hover:text-primary transition-colors"
                     >
-                      <span>Q{idx + 1}: {item.question}</span>
+                      <span>
+                        Q{idx + 1}: {item.question}
+                      </span>
                       {isRevealed ? (
                         <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
                       ) : (
@@ -174,7 +191,9 @@ export default function StudyModeCard({
 
                     {isRevealed && (
                       <div className="rounded-xl bg-primary/5 border border-primary/10 p-4 text-sm leading-relaxed text-foreground/90 animate-in slide-in-from-top-1 duration-150">
-                        <div className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Answer</div>
+                        <div className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">
+                          Answer
+                        </div>
                         <p>{item.answer}</p>
                       </div>
                     )}
@@ -183,7 +202,9 @@ export default function StudyModeCard({
               })}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">No practice questions generated. Switch submodes or try again.</p>
+            <p className="text-sm text-muted-foreground">
+              No practice questions generated. Switch submodes or try again.
+            </p>
           )}
         </div>
       )}

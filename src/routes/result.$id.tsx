@@ -316,7 +316,9 @@ function ResultPage() {
             {/* Layout Grid (Main vs Chat Panel) */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
               {/* Left Side: Summary and Highlights Content */}
-              <div className={[chatOpen ? "lg:col-span-2" : "lg:col-span-3", "space-y-4"].join(" ")}>
+              <div
+                className={[chatOpen ? "lg:col-span-2" : "lg:col-span-3", "space-y-4"].join(" ")}
+              >
                 <div className="relative">
                   <AnimatePresence mode="wait">
                     {isRegenerating ? (
@@ -377,12 +379,14 @@ function ResultPage() {
                                   Algorithm breakdown
                                 </div>
                                 <ul className="space-y-2">
-                                  {item.response.complexity.algorithmBreakdown.map((item: string, i: number) => (
-                                    <li key={i} className="flex gap-2.5 items-start text-sm">
-                                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                                      <span className="leading-relaxed">{item}</span>
-                                    </li>
-                                  ))}
+                                  {item.response.complexity.algorithmBreakdown.map(
+                                    (item: string, i: number) => (
+                                      <li key={i} className="flex gap-2.5 items-start text-sm">
+                                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                                        <span className="leading-relaxed">{item}</span>
+                                      </li>
+                                    ),
+                                  )}
                                 </ul>
                               </div>
                             )}
@@ -393,12 +397,17 @@ function ResultPage() {
                                   Potential Issues / Vulnerabilities
                                 </div>
                                 <ul className="space-y-2">
-                                  {item.response.complexity.potentialIssues.map((item: string, i: number) => (
-                                    <li key={i} className="flex gap-2.5 items-start text-sm text-muted-foreground">
-                                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-destructive" />
-                                      <span className="leading-relaxed">{item}</span>
-                                    </li>
-                                  ))}
+                                  {item.response.complexity.potentialIssues.map(
+                                    (item: string, i: number) => (
+                                      <li
+                                        key={i}
+                                        className="flex gap-2.5 items-start text-sm text-muted-foreground"
+                                      >
+                                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-destructive" />
+                                        <span className="leading-relaxed">{item}</span>
+                                      </li>
+                                    ),
+                                  )}
                                 </ul>
                               </div>
                             )}
@@ -412,7 +421,9 @@ function ResultPage() {
                               GitHub Ingestion Details
                             </div>
 
-                            <h3 className="font-semibold text-lg">{item.response.repoDetails.repoName}</h3>
+                            <h3 className="font-semibold text-lg">
+                              {item.response.repoDetails.repoName}
+                            </h3>
                             <p className="text-sm leading-relaxed text-muted-foreground">
                               {item.response.repoDetails.architectureOverview}
                             </p>
@@ -423,14 +434,16 @@ function ResultPage() {
                                   Key Dependencies
                                 </div>
                                 <div className="flex flex-wrap gap-1.5">
-                                  {item.response.repoDetails.keyDependencies.map((dep: string, i: number) => (
-                                    <span
-                                      key={i}
-                                      className="bg-panel border border-border rounded-lg text-xs font-medium px-2 py-1"
-                                    >
-                                      {dep}
-                                    </span>
-                                  ))}
+                                  {item.response.repoDetails.keyDependencies.map(
+                                    (dep: string, i: number) => (
+                                      <span
+                                        key={i}
+                                        className="bg-panel border border-border rounded-lg text-xs font-medium px-2 py-1"
+                                      >
+                                        {dep}
+                                      </span>
+                                    ),
+                                  )}
                                 </div>
                               </div>
                             )}
@@ -460,7 +473,10 @@ function ResultPage() {
                             </div>
                             <ul className="space-y-2">
                               {item.response.actionItems.map((ai: string, i: number) => (
-                                <li key={i} className="flex items-start gap-2.5 text-sm leading-relaxed">
+                                <li
+                                  key={i}
+                                  className="flex items-start gap-2.5 text-sm leading-relaxed"
+                                >
                                   <span className="mt-1 h-3.5 w-3.5 shrink-0 rounded border border-border bg-panel flex items-center justify-center text-primary" />
                                   <span>{ai}</span>
                                 </li>
@@ -477,7 +493,10 @@ function ResultPage() {
                             </div>
                             <ul className="space-y-2">
                               {item.response.openQuestions.map((oq: string, i: number) => (
-                                <li key={i} className="flex items-start gap-2.5 text-sm leading-relaxed text-muted-foreground">
+                                <li
+                                  key={i}
+                                  className="flex items-start gap-2.5 text-sm leading-relaxed text-muted-foreground"
+                                >
                                   <span className="text-amber-500 font-bold">?</span>
                                   <span>{oq}</span>
                                 </li>

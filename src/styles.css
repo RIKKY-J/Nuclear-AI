@@ -153,7 +153,11 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  h1, h2, h3, h4, .font-display {
+  h1,
+  h2,
+  h3,
+  h4,
+  .font-display {
     font-family: var(--font-display);
     letter-spacing: -0.01em;
   }
@@ -161,20 +165,36 @@
 
 @utility hero-grid {
   background-image:
-    linear-gradient(to right, color-mix(in oklab, var(--color-foreground) 6%, transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in oklab, var(--color-foreground) 6%, transparent) 1px, transparent 1px);
+    linear-gradient(
+      to right,
+      color-mix(in oklab, var(--color-foreground) 6%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--color-foreground) 6%, transparent) 1px,
+      transparent 1px
+    );
   background-size: 44px 44px;
   mask-image: radial-gradient(ellipse at center, black 0%, transparent 75%);
 }
 
 @utility glow-primary {
-  box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-primary) 30%, transparent),
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--color-primary) 30%, transparent),
     0 8px 40px -8px var(--color-glow);
 }
 
 @keyframes pulse-ring {
-  0%, 100% { opacity: 0.6; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.05); }
+  0%,
+  100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
 }
 
 @utility animate-pulse-ring {
@@ -196,4 +216,3 @@
 @utility rotate-y-180 {
   transform: rotateY(180deg);
 }
-
