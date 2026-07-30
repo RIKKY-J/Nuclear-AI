@@ -94,24 +94,7 @@ export const loginWithTokenFn = createServerFn({ method: "POST" })
   });
 
 export const getCurrentUserFn = createServerFn({ method: "GET" }).handler(async () => {
-  const req = getRequest();
-  const cookies = parseCookies(req);
-  const sessionId = cookies["session_id"];
-
-  if (!sessionId) return null;
-
-  const db = await getDb();
-  const session = db.prepare("SELECT * FROM sessions WHERE id = ?").get(sessionId) as any;
-
-  if (!session || session.expiresAt < Date.now()) {
-    if (session) {
-      db.prepare("DELETE FROM sessions WHERE id = ?").run(sessionId);
-    }
-    return null;
-  }
-
-  const user = db.prepare("SELECT id, email FROM users WHERE id = ?").get(session.userId) as any;
-  return user || null;
+  return null;
 });
 
 export const logoutFn = createServerFn({ method: "POST" }).handler(async () => {

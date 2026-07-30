@@ -62,8 +62,11 @@ export async function getDb() {
   if (db) return db;
 
   const { DatabaseSync } = await import("node:sqlite");
-  // Database file stored locally and ignored by git
-  db = new DatabaseSync("nuclear.db.local");
+  // Database file stored in /tmp on Vercel/production to avoid read-only filesystem issues
+  const dbPath = process.env.VERCEL || process.env.NODE_ENV === "production"
+    ? "/tmp/nuclear.db"
+    : "nuclear.db.local";
+  db = new DatabaseSync(dbPath);
   initDb(db);
   return db;
 }
