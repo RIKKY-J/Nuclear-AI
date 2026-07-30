@@ -17,10 +17,10 @@ function parseCookies(req: Request): Record<string, string> {
 }
 
 export const sendMagicLinkFn = createServerFn({ method: "POST" })
-  .input(z.object({ email: z.string().email() }))
-  .handler(async ({ input }) => {
+  .validator(z.object({ email: z.string().email() }))
+  .handler(async ({ data }) => {
     const db = await getDb();
-    const email = input.email.toLowerCase().trim();
+    const email = data.email.toLowerCase().trim();
 
     // 1. Check if user exists, otherwise create
     let user = db.prepare("SELECT * FROM users WHERE email = ?").get(email) as any;
@@ -55,10 +55,10 @@ export const sendMagicLinkFn = createServerFn({ method: "POST" })
   });
 
 export const loginWithTokenFn = createServerFn({ method: "POST" })
-  .input(z.object({ token: z.string() }))
-  .handler(async ({ input }) => {
+  .validator(z.object({ token: z.string() }))
+  .handler(async ({ data }) => {
     const db = await getDb();
-    const { token } = input;
+    const { token } = data;
 
     // 1. Validate the magic token
     const session = db.prepare("SELECT * FROM sessions WHERE id = ?").get(token) as any;

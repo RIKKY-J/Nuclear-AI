@@ -23,6 +23,7 @@ export interface HistoryItem {
     detailed?: SummaryResponse;
   };
   favorite?: boolean;
+  sourceType?: string;
 }
 
 const KEY = "nuclear:history";
@@ -58,6 +59,7 @@ export function addHistory(
     response,
     input,
     length,
+    sourceType: input.type,
     summaries: {
       [length]: response,
     },
@@ -83,7 +85,7 @@ export function getHistoryItem(id: string): HistoryItem | undefined {
 export async function removeHistory(id: string) {
   writeLocal(readLocal().filter((x) => x.id !== id));
   try {
-    await deleteSummaryFn({ id });
+    await deleteSummaryFn({ data: { id } });
   } catch (e) {
     console.error("Could not delete from server", e);
   }
@@ -112,7 +114,7 @@ export function useHistory(): HistoryItem[] {
         const localItems = readLocal();
         const anonymousIds = localItems.map((item) => item.id);
         if (anonymousIds.length > 0) {
-          await syncAnonymousHistoryFn({ ids: anonymousIds });
+          await syncAnonymousHistoryFn({ data: { ids: anonymousIds } });
           // Clear local storage after successful sync to avoid duplicated listing
           sessionStorage.removeItem(KEY);
         }

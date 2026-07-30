@@ -4,14 +4,14 @@ import { z } from "zod";
 import { getDb } from "./db";
 
 export const getChatHistoryFn = createServerFn({ method: "GET" })
-  .input(z.object({ summaryId: z.string() }))
-  .handler(async ({ input }) => {
+  .validator(z.object({ summaryId: z.string() }))
+  .handler(async ({ data }) => {
     const db = await getDb();
     const rows = db
       .prepare(
         "SELECT role, content, createdAt FROM chats WHERE summaryId = ? ORDER BY createdAt ASC",
       )
-      .all(input.summaryId) as any[];
+      .all(data.summaryId) as any[];
 
     return rows.map((row) => ({
       role: row.role as "user" | "assistant",
@@ -21,10 +21,10 @@ export const getChatHistoryFn = createServerFn({ method: "GET" })
   });
 
 export const sendChatMessageFn = createServerFn({ method: "POST" })
-  .input(z.object({ summaryId: z.string(), message: z.string() }))
-  .handler(async ({ input }) => {
+  .validator(z.object({ summaryId: z.string(), message: z.string() }))
+  .handler(async ({ data }) => {
     const db = await getDb();
-    const { summaryId, message } = input;
+    const { summaryId, message } = data;
 
     // 1. Fetch summary context
     const summary = db.prepare("SELECT * FROM summaries WHERE id = ?").get(summaryId) as any;

@@ -25,7 +25,7 @@ export default function ChatPanel({
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const history = await getChatHistoryFn({ summaryId });
+        const history = await getChatHistoryFn({ data: { summaryId } });
         setMessages(history);
       } catch (err) {
         console.error(err);
@@ -59,7 +59,7 @@ export default function ChatPanel({
     setMessages((prev) => [...prev, userMsg]);
 
     try {
-      const res = await sendChatMessageFn({ summaryId, message: userText });
+      const res = await sendChatMessageFn({ data: { summaryId, message: userText } });
       setMessages((prev) => [...prev, res]);
     } catch (err) {
       console.error(err);

@@ -15,6 +15,7 @@ import { toast } from "sonner";
 
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import Loader from "@/components/common/Loader";
 import {
   getHistoryListFn,
   toggleFavoriteFn,
@@ -75,7 +76,7 @@ function HistoryPage() {
           const localItems = JSON.parse(localRaw) as HistoryItem[];
           const localIds = localItems.map((x) => x.id);
           if (localIds.length > 0) {
-            await syncAnonymousHistoryFn({ ids: localIds });
+            await syncAnonymousHistoryFn({ data: { ids: localIds } });
             sessionStorage.removeItem("nuclear:history");
           }
         }
@@ -102,7 +103,7 @@ function HistoryPage() {
     e.preventDefault();
     e.stopPropagation();
     try {
-      const { favorite } = await toggleFavoriteFn({ id });
+      const { favorite } = await toggleFavoriteFn({ data: { id } });
       setItems((prev) => prev.map((item) => (item.id === id ? { ...item, favorite } : item)));
       toast.success(favorite ? "Added to favorites" : "Removed from favorites");
     } catch {
@@ -114,7 +115,7 @@ function HistoryPage() {
     e.preventDefault();
     e.stopPropagation();
     try {
-      await deleteSummaryFn({ id });
+      await deleteSummaryFn({ data: { id } });
       setItems((prev) => prev.filter((item) => item.id !== id));
       // Update local storage too if anonymous
       if (!user) {

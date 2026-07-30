@@ -10,7 +10,7 @@ import { loginWithTokenFn, sendMagicLinkFn } from "@/lib/auth.functions";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { token?: string } => ({
     token: typeof search.token === "string" ? search.token : undefined,
   }),
 });
@@ -29,7 +29,7 @@ function LoginPage() {
       const verifyToken = async () => {
         setIsVerifying(true);
         try {
-          await loginWithTokenFn({ token });
+          await loginWithTokenFn({ data: { token } });
           toast.success("Logged in successfully!");
           // Navigate to home after a brief delay so they see the success state
           setTimeout(() => {
@@ -51,7 +51,7 @@ function LoginPage() {
 
     setIsLoading(true);
     try {
-      await sendMagicLinkFn({ email: email.trim() });
+      await sendMagicLinkFn({ data: { email: email.trim() } });
       setSentTo(email.toLowerCase().trim());
       toast.success("Magic link sent!", {
         description: "Check your email (or server terminal logs) for the link.",

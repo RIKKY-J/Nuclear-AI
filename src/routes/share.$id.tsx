@@ -24,7 +24,7 @@ function ShareResultPage() {
   useEffect(() => {
     const fetchItem = async () => {
       try {
-        const details = await fetchSummaryDetailsFn({ id });
+        const details = await fetchSummaryDetailsFn({ data: { id } });
         setItem(details);
       } catch (err) {
         console.error(err);

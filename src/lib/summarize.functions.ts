@@ -549,14 +549,14 @@ ${languagePrompt}`;
   });
 
 export const getPreviewMetadataFn = createServerFn({ method: "POST" })
-  .input(
+  .validator(
     z.object({
       type: z.enum(["website", "youtube", "github"]),
       url: z.string().url(),
     }),
   )
-  .handler(async ({ input }) => {
-    const { type, url } = input;
+  .handler(async ({ data }) => {
+    const { type, url } = data;
 
     if (type === "website") {
       try {

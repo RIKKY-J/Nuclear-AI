@@ -50,22 +50,22 @@ export const getHistoryListFn = createServerFn({ method: "GET" }).handler(async 
 });
 
 export const toggleFavoriteFn = createServerFn({ method: "POST" })
-  .input(z.object({ id: z.string() }))
-  .handler(async ({ input }) => {
+  .validator(z.object({ id: z.string() }))
+  .handler(async ({ data }) => {
     const db = await getDb();
-    const summary = db.prepare("SELECT favorite FROM summaries WHERE id = ?").get(input.id) as any;
+    const summary = db.prepare("SELECT favorite FROM summaries WHERE id = ?").get(data.id) as any;
     if (!summary) throw new Error("Summary not found");
 
     const newFav = summary.favorite === 1 ? 0 : 1;
-    db.prepare("UPDATE summaries SET favorite = ? WHERE id = ?").run(newFav, input.id);
+    db.prepare("UPDATE summaries SET favorite = ? WHERE id = ?").run(newFav, data.id);
     return { favorite: newFav === 1 };
   });
 
 export const deleteSummaryFn = createServerFn({ method: "POST" })
-  .input(z.object({ id: z.string() }))
-  .handler(async ({ input }) => {
+  .validator(z.object({ id: z.string() }))
+  .handler(async ({ data }) => {
     const db = await getDb();
-    db.prepare("DELETE FROM summaries WHERE id = ?").run(input.id);
+    db.prepare("DELETE FROM summaries WHERE id = ?").run(data.id);
     return { success: true };
   });
 
@@ -79,29 +79,29 @@ export const clearUserHistoryFn = createServerFn({ method: "POST" }).handler(asy
 });
 
 export const syncAnonymousHistoryFn = createServerFn({ method: "POST" })
-  .input(z.object({ ids: z.array(z.string()) }))
-  .handler(async ({ input }) => {
+  .validator(z.object({ ids: z.array(z.string()) }))
+  .handler(async ({ data }) => {
     const userId = await getUserIdFromSession();
-    if (!userId || input.ids.length === 0) return { success: false };
+    if (!userId || data.ids.length === 0) return { success: false };
 
     const db = await getDb();
-    const placeholders = input.ids.map(() => "?").join(",");
+    const placeholders = data.ids.map(() => "?").join(",");
     db.prepare(
       `
       UPDATE summaries 
       SET userId = ? 
       WHERE id IN (${placeholders}) AND userId IS NULL
     `,
-    ).run(userId, ...input.ids);
+    ).run(userId, ...data.ids);
 
     return { success: true };
   });
 
 export const fetchSummaryDetailsFn = createServerFn({ method: "GET" })
-  .input(z.object({ id: z.string() }))
-  .handler(async ({ input }) => {
+  .validator(z.object({ id: z.string() }))
+  .handler(async ({ data }) => {
     const db = await getDb();
-    const row = db.prepare("SELECT * FROM summaries WHERE id = ?").get(input.id) as any;
+    const row = db.prepare("SELECT * FROM summaries WHERE id = ?").get(data.id) as any;
     if (!row) return null;
 
     return {
@@ -116,12 +116,12 @@ export const fetchSummaryDetailsFn = createServerFn({ method: "GET" })
   });
 
 export const updateSummaryResponseFn = createServerFn({ method: "POST" })
-  .input(z.object({ id: z.string(), response: z.any() }))
-  .handler(async ({ input }) => {
+  .validator(z.object({ id: z.string(), response: z.any() }))
+  .handler(async ({ data }) => {
     const db = await getDb();
     db.prepare("UPDATE summaries SET response = ? WHERE id = ?").run(
-      JSON.stringify(input.response),
-      input.id,
+      JSON.stringify(data.response),
+      data.id,
     );
     return { success: true };
   });

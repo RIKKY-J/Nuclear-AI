@@ -71,7 +71,7 @@ function ResultPage() {
       } else {
         // Fallback to fetch from database if page reloaded/shared
         try {
-          const dbItem = await fetchSummaryDetailsFn({ id });
+          const dbItem = await fetchSummaryDetailsFn({ data: { id } });
           if (dbItem) {
             setItem(dbItem as any);
           }
@@ -125,7 +125,7 @@ function ResultPage() {
 
       setItem(updated);
       updateHistoryItem(id, updated);
-      await updateSummaryResponseFn({ id, response: res.response });
+      await updateSummaryResponseFn({ data: { id, response: res.response } });
       setCurrentLang(langLabel);
       toast.success(`Translated summary to ${langLabel}`);
     } catch (err) {
@@ -148,7 +148,7 @@ function ResultPage() {
       };
       setItem(updated);
       updateHistoryItem(id, updated);
-      await updateSummaryResponseFn({ id, response: item.summaries[len]! });
+      await updateSummaryResponseFn({ data: { id, response: item.summaries[len]! } });
       toast.success(`Switched to ${len} summary`);
       return;
     }
@@ -182,7 +182,7 @@ function ResultPage() {
 
       setItem(updated);
       updateHistoryItem(id, updated);
-      await updateSummaryResponseFn({ id, response: res.response });
+      await updateSummaryResponseFn({ data: { id, response: res.response } });
       toast.success(`Generated ${len} summary`);
     } catch (err) {
       console.error(err);

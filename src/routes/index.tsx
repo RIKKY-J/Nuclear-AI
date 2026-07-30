@@ -41,7 +41,7 @@ function Home() {
     if (s.source === "website" || s.source === "youtube" || s.source === "github") {
       try {
         const urlVal = s.source === "youtube" ? s.youtubeUrl : s.websiteUrl;
-        const meta = await getPreviewMetadataFn({ type: s.source as any, url: urlVal });
+        const meta = await getPreviewMetadataFn({ data: { type: s.source as any, url: urlVal } });
         setPreviewData(meta);
       } catch (e) {
         console.error("Preview fetch failed", e);
@@ -113,7 +113,7 @@ function Home() {
               <SourceTabs
                 value={s.source}
                 onChange={s.changeSource}
-                disabled={s.status === "loading"}
+                disabled={false}
               />
 
               <AnimatePresence mode="wait">
