@@ -1,36 +1,69 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { generateObject, NoObjectGeneratedError } from "ai";
 import { z } from "zod";
 import { YoutubeTranscript } from "youtube-transcript";
+import mammoth from "mammoth";
+import { getDb } from "./db";
+
+// Helper to parse cookies
+function parseCookies(req: Request): Record<string, string> {
+  const cookieHeader = req.headers.get("cookie") || "";
+  const cookies: Record<string, string> = {};
+  cookieHeader.split(";").forEach((str) => {
+    const parts = str.split("=");
+    if (parts[0] && parts[1]) {
+      cookies[parts[0].trim()] = decodeURIComponent(parts[1].trim());
+    }
+  });
+  return cookies;
+}
 
 const SummarySchema = z.object({
   title: z.string(),
-  summary: z.array(z.string()),
-  keyPoints: z.array(z.string()),
+  summary: z.string(), // Prose narrative synthesis
+  keyPoints: z.array(z.string()), // Distinct scannable bullet points
   keywords: z.array(z.string()),
   wordCount: z.number(),
+  actionItems: z.array(z.string()).optional(),
+  openQuestions: z.array(z.string()).optional(),
+  complexity: z.object({
+    language: z.string(),
+    purposeOverview: z.string(),
+    algorithmBreakdown: z.array(z.string()),
+    timeComplexity: z.string(),
+    spaceComplexity: z.string(),
+    dependencies: z.array(z.string()),
+    potentialIssues: z.array(z.string()),
+  }).optional(),
+  repoDetails: z.object({
+    repoName: z.string(),
+    primaryLanguage: z.string(),
+    architectureOverview: z.string(),
+    keyDependencies: z.array(z.string()),
+    setupInstructions: z.string(),
+  }).optional(),
+  studyOutput: z.object({
+    notes: z.array(z.string()).optional(),
+    flashcards: z.array(z.object({ front: z.string(), back: z.string() })).optional(),
+    qa: z.array(z.object({ question: z.string(), answer: z.string() })).optional(),
+  }).optional(),
+  coverageNote: z.string().optional(),
 });
 
-export type SummarizeInput =
-  | { type: "text"; text: string; length?: "short" | "medium" | "detailed" }
-  | { type: "website"; url: string; length?: "short" | "medium" | "detailed" }
-  | { type: "youtube"; url: string; length?: "short" | "medium" | "detailed" }
-  | {
-      type: "pdf" | "docx" | "txt" | "markdown" | "html";
-      fileName: string;
-      mimeType: string;
-      // base64-encoded file bytes
-      dataBase64: string;
-      length?: "short" | "medium" | "detailed";
-    };
-
-const SYSTEM_PROMPT = `You are Nuclear AI, an expert summarizer.
-Return a clear, structured JSON summary. Rules:
-- title: a short descriptive title (max 90 chars).
-- summary: 3-5 tight paragraphs, factual and neutral.
-- keyPoints: 4-7 bullet-worthy sentences.
-- keywords: 5-10 short topical keywords.
-- wordCount: your best estimate of the ORIGINAL source's word count (integer).`;
+export type SummarizeInput = {
+  type: "text" | "website" | "youtube" | "pdf" | "docx" | "txt" | "markdown" | "html" | "github" | "audio";
+  text?: string;
+  url?: string;
+  fileName?: string;
+  mimeType?: string;
+  dataBase64?: string;
+  length?: "short" | "medium" | "detailed";
+  mode?: "standard" | "study" | "code";
+  studySubmode?: "notes" | "flashcards" | "qa";
+  customLens?: string;
+  language?: string;
+};
 
 function stripHtml(html: string): string {
   return html
@@ -66,7 +99,6 @@ async function fetchWebsiteText(url: string): Promise<string> {
 async function fetchYoutubeContext(url: string): Promise<string> {
   const id = extractYoutubeId(url);
   if (!id) throw new Error("Invalid YouTube URL.");
-  // Use oEmbed for reliable title/author, then fetch page for description.
   const oembedRes = await fetch(
     `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${id}&format=json`,
   );
@@ -135,19 +167,62 @@ async function fetchYoutubeTranscriptText(id: string): Promise<string> {
   }
 }
 
+function parseGithubUrl(url: string): { owner: string; repo: string } | null {
+  const m = url.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+  if (!m) return null;
+  const owner = m[1];
+  let repo = m[2];
+  if (repo.endsWith(".git")) repo = repo.slice(0, -4);
+  return { owner, repo };
+}
+
+async function fetchGithubRepoDetails(url: string) {
+  const parsed = parseGithubUrl(url);
+  if (!parsed) throw new Error("Invalid GitHub URL.");
+  const { owner, repo } = parsed;
+
+  const repoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
+  if (!repoRes.ok) throw new Error(`Could not fetch GitHub repo info (HTTP ${repoRes.status}).`);
+  const repoData = (await repoRes.json()) as any;
+
+  let readme = "";
+  const readmeRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/readme`);
+  if (readmeRes.ok) {
+    const readmeData = (await readmeRes.json()) as any;
+    if (readmeData.content) {
+      readme = atob(readmeData.content.replace(/\s/g, ""));
+    }
+  }
+
+  let structure = "";
+  const contentsRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents`);
+  if (contentsRes.ok) {
+    const contentsData = (await contentsRes.json()) as any[];
+    structure = contentsData.map((f) => `${f.type === "dir" ? "[DIR]" : "[FILE]"} ${f.name}`).join("\n");
+  }
+
+  return {
+    repoName: `${owner}/${repo}`,
+    stars: repoData.stargazers_count || 0,
+    primaryLanguage: repoData.language || "Unknown",
+    readme: readme.slice(0, 40000),
+    structure,
+  };
+}
+
 async function buildUserMessage(
   input: SummarizeInput,
-): Promise<{ message: { role: "user"; content: unknown }; transcriptAvailable?: boolean }> {
+): Promise<{ message: { role: "user"; content: unknown }; transcriptAvailable?: boolean; coverageNote?: string }> {
   if (input.type === "text") {
     return {
       message: {
         role: "user",
-        content: `Summarize the following text:\n\n${input.text.slice(0, 200_000)}`,
+        content: `Summarize the following text:\n\n${input.text?.slice(0, 200_000)}`,
       },
     };
   }
   if (input.type === "website") {
-    const text = await fetchWebsiteText(input.url);
+    const text = await fetchWebsiteText(input.url!);
     return {
       message: {
         role: "user",
@@ -156,14 +231,14 @@ async function buildUserMessage(
     };
   }
   if (input.type === "youtube") {
-    const id = extractYoutubeId(input.url);
+    const id = extractYoutubeId(input.url!);
     if (!id) throw new Error("Invalid YouTube URL.");
 
     let transcript = "";
     let transcriptAvailable = false;
 
     try {
-      if (input.url.includes("no_transcript=true")) {
+      if (input.url?.includes("no_transcript=true")) {
         throw new Error("Simulated transcript unavailable");
       }
       transcript = await fetchYoutubeTranscriptText(id);
@@ -173,7 +248,7 @@ async function buildUserMessage(
       transcriptAvailable = false;
     }
 
-    const metaContext = await fetchYoutubeContext(input.url);
+    const metaContext = await fetchYoutubeContext(input.url!);
     let fullContext = metaContext;
     if (transcriptAvailable) {
       fullContext += `\n\nTranscript:\n${transcript}\n\nNote: Please prioritize summarizing based on the actual transcript of the video above.`;
@@ -185,6 +260,25 @@ async function buildUserMessage(
         content: `Summarize this YouTube video:\n\n${fullContext}`,
       },
       transcriptAvailable,
+      coverageNote: transcriptAvailable ? undefined : "Metadata-only summary — video transcript unavailable.",
+    };
+  }
+
+  if (input.type === "github") {
+    const details = await fetchGithubRepoDetails(input.url!);
+    const content = [
+      `Repository: ${details.repoName}`,
+      `Stars: ${details.stars}`,
+      `Primary Language: ${details.primaryLanguage}`,
+      `Structure:\n${details.structure}`,
+      `README:\n${details.readme}`,
+    ].join("\n\n");
+
+    return {
+      message: {
+        role: "user",
+        content: `Analyze this GitHub Repository:\n\n${content}`,
+      },
     };
   }
 
@@ -194,12 +288,24 @@ async function buildUserMessage(
     input.type === "markdown" ||
     input.type === "html"
   ) {
-    const raw = new TextDecoder().decode(base64ToBytes(input.dataBase64));
+    const raw = new TextDecoder().decode(base64ToBytes(input.dataBase64!));
     const text = input.type === "html" ? stripHtml(raw) : raw;
     return {
       message: {
         role: "user",
         content: `Summarize the following ${input.type.toUpperCase()} file (${input.fileName}):\n\n${text.slice(0, 200_000)}`,
+      },
+    };
+  }
+  if (input.type === "docx") {
+    const rawText = await mammoth.extractRawText({
+      buffer: Buffer.from(input.dataBase64!, "base64"),
+    }).then((res) => res.value);
+
+    return {
+      message: {
+        role: "user",
+        content: `Summarize the following DOCX document (${input.fileName}):\n\n${rawText.slice(0, 200_000)}`,
       },
     };
   }
@@ -218,10 +324,20 @@ async function buildUserMessage(
       },
     };
   }
-  if (input.type === "docx") {
-    throw new Error(
-      "DOCX files aren't supported by the AI yet — please convert to PDF or paste the text.",
-    );
+  if (input.type === "audio") {
+    return {
+      message: {
+        role: "user",
+        content: [
+          { type: "text", text: `Transcribe and summarize the attached audio file (${input.fileName}).` },
+          {
+            type: "file",
+            data: `data:${input.mimeType};base64,${input.dataBase64}`,
+            mediaType: input.mimeType!,
+          },
+        ],
+      },
+    };
   }
   throw new Error("Unsupported source type.");
 }
@@ -234,6 +350,10 @@ function labelFor(type: SummarizeInput["type"]): string {
       return "Website";
     case "youtube":
       return "YouTube";
+    case "github":
+      return "GitHub Repository";
+    case "audio":
+      return "Audio Recording";
     default:
       return type.toUpperCase();
   }
@@ -249,30 +369,79 @@ export const summarizeFn = createServerFn({ method: "POST" })
     const google = createGoogleGenerativeAI({ apiKey });
     const model = google("gemini-2.5-flash");
 
-    const { message, transcriptAvailable } = await buildUserMessage(data);
+    const { message, transcriptAvailable, coverageNote } = await buildUserMessage(data);
 
     const length = data.length || "medium";
     let lengthInstructions = "";
     if (length === "short") {
-      lengthInstructions = `- summary: exactly 2-3 short, clear key point sentences (array of strings).
-- keyPoints: exactly 2-3 detailed highlight sentences.
+      lengthInstructions = `- summary: exactly 1-2 cohesive prose sentences.
+- keyPoints: exactly 2-3 detailed scannable bullet point highlights.
 - keywords: 3-5 short topical keywords.`;
     } else if (length === "detailed") {
-      lengthInstructions = `- summary: exactly 6-8 comprehensive, detailed key point sentences (array of strings).
-- keyPoints: 6-10 detailed highlight sentences.
+      lengthInstructions = `- summary: exactly 2-3 cohesive prose paragraphs explaining the narrative in depth.
+- keyPoints: exactly 6-10 comprehensive bullet point highlights.
 - keywords: 8-12 short topical keywords.`;
     } else {
       // medium
-      lengthInstructions = `- summary: exactly 4-5 clear, concise key point sentences (array of strings).
-- keyPoints: 4-5 detailed highlight sentences.
+      lengthInstructions = `- summary: exactly 1 cohesive prose paragraph.
+- keyPoints: exactly 4-5 scannable bullet point highlights.
 - keywords: 5-8 short topical keywords.`;
     }
 
-    const systemPrompt = `You are Nuclear AI, an expert summarizer.
-Return a clear, structured JSON summary. Rules:
+    const mode = data.mode || "standard";
+    let modePrompt = "";
+    if (mode === "study") {
+      const sub = data.studySubmode || "notes";
+      modePrompt = `
+Additional Instructions:
+- mode: "study".
+- You MUST populate the \`studyOutput\` field in the schema based on submode: "${sub}".
+- If submode is "notes", populate \`studyOutput.notes\` with comprehensive, headed hierarchical study notes.
+- If submode is "flashcards", populate \`studyOutput.flashcards\` with a list of front (question/term) and back (answer/definition) card pairs.
+- If submode is "qa", populate \`studyOutput.qa\` with a list of sample exam questions and model answers.`;
+    } else if (mode === "code") {
+      modePrompt = `
+Additional Instructions:
+- mode: "code".
+- You MUST populate the \`complexity\` field with the language, purposeOverview, algorithmBreakdown, timeComplexity, spaceComplexity, dependencies, and potentialIssues.`;
+    } else if (data.type === "github") {
+      modePrompt = `
+Additional Instructions:
+- mode: "github".
+- You MUST populate the \`repoDetails\` field with repository details including repoName, primaryLanguage, architectureOverview, keyDependencies, and setupInstructions.`;
+    }
+
+    let lensPrompt = "";
+    if (data.customLens) {
+      lensPrompt = `
+Custom Lens Parameter:
+- Focus the summary heavily on this requested perspective: "${data.customLens}". Still preserve the JSON structure, but steer all contents to highlight this angle.`;
+    }
+
+    let languagePrompt = "";
+    if (data.language) {
+      languagePrompt = `
+Translation Instruction:
+- You MUST output the title, summary, keyPoints, actionItems, openQuestions, complexity text fields, and studyOutput text/notes/flashcards fully translated into: "${data.language}".`;
+    }
+
+    const systemPrompt = `You are Nuclear AI, an expert summarizer and information architect.
+Return a clear, structured JSON object conforming precisely to the requested schema.
+
+General Rules:
 - title: a short descriptive title (max 90 chars).
+- summary: Cohesive prose written in a natural reading flow. Do NOT use bullet points or prefix lines with checkmarks or dash indicators.
+- keyPoints: List of discrete, scannable facts and key takeaways.
+- wordCount: your best estimate of the ORIGINAL source's word count (integer).
+- actionItems: Extract concrete next steps or actionable items if present.
+- openQuestions: Extract unresolved details, questions, or gaps raised in the content.
+- coverageNote: If the source material was truncated or only metadata was parsed, explain that here.
+
+Length Guidelines:
 ${lengthInstructions}
-- wordCount: your best estimate of the ORIGINAL source's word count (integer).`;
+${modePrompt}
+${lensPrompt}
+${languagePrompt}`;
 
     try {
       const { object } = await generateObject({
@@ -284,15 +453,58 @@ ${lengthInstructions}
 
       const wc = Math.max(1, Math.round(object.wordCount || 0));
       const readMin = Math.max(1, Math.round(wc / 220));
-      return {
+
+      const responsePayload = {
         title: object.title.slice(0, 140),
-        summary: object.summary.map((p) => `- ${p}`).join("\n"),
-        keyPoints: object.keyPoints.slice(0, 10),
-        keywords: object.keywords.slice(0, 12),
+        summary: object.summary, // Return as prose string
+        keyPoints: object.keyPoints.slice(0, 15),
+        keywords: object.keywords.slice(0, 15),
         wordCount: wc,
         readingTime: `${readMin} min`,
         source: labelFor(data.type),
         transcriptAvailable,
+        actionItems: object.actionItems,
+        openQuestions: object.openQuestions,
+        complexity: object.complexity,
+        repoDetails: object.repoDetails,
+        studyOutput: object.studyOutput,
+        coverageNote: object.coverageNote || coverageNote,
+      };
+
+      // Get user session to associate
+      const req = getRequest();
+      const cookies = parseCookies(req);
+      const sessionId = cookies["session_id"];
+      let userId: string | null = null;
+
+      if (sessionId) {
+        const db = await getDb();
+        const session = db.prepare("SELECT userId FROM sessions WHERE id = ? AND expiresAt > ?").get(sessionId, Date.now()) as any;
+        if (session) {
+          userId = session.userId;
+        }
+      }
+
+      // Save to SQLite database
+      const summaryId = `sum_${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const db = await getDb();
+      db.prepare(`
+        INSERT INTO summaries (id, userId, createdAt, preview, input, response, length, sourceType, favorite)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
+      `).run(
+        summaryId,
+        userId,
+        Date.now(),
+        responsePayload.title,
+        JSON.stringify(data),
+        JSON.stringify(responsePayload),
+        length,
+        data.type,
+      );
+
+      return {
+        id: summaryId,
+        response: responsePayload,
       };
     } catch (error) {
       console.error("AI Generation Error details:", error);
@@ -309,3 +521,87 @@ ${lengthInstructions}
       throw new Error(msg);
     }
   });
+
+export const getPreviewMetadataFn = createServerFn({ method: "POST" })
+  .input(
+    z.object({
+      type: z.enum(["website", "youtube", "github"]),
+      url: z.string().url(),
+    }),
+  )
+  .handler(async ({ input }) => {
+    const { type, url } = input;
+
+    if (type === "website") {
+      try {
+        const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
+        if (!res.ok) throw new Error("Fetch failed");
+        const html = await res.text();
+        const titleMatch = html.match(/<title>([^<]+)<\/title>/i);
+        const title = titleMatch ? titleMatch[1].trim() : new URL(url).hostname;
+
+        const hostname = new URL(url).hostname;
+        const favicon = `https://www.google.com/s2/favicons?sz=64&domain=${hostname}`;
+
+        return { type, title, favicon, description: hostname };
+      } catch {
+        const hostname = new URL(url).hostname;
+        return {
+          type,
+          title: hostname,
+          favicon: `https://www.google.com/s2/favicons?sz=64&domain=${hostname}`,
+          description: "Website",
+        };
+      }
+    }
+
+    if (type === "youtube") {
+      const id = extractYoutubeId(url);
+      if (!id) throw new Error("Invalid YouTube URL");
+
+      let title = "YouTube Video";
+      let author = "YouTube Channel";
+      const oembedRes = await fetch(
+        `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${id}&format=json`,
+      );
+      if (oembedRes.ok) {
+        const j = (await oembedRes.json()) as any;
+        title = j.title || title;
+        author = j.author_name || author;
+      }
+
+      const thumbnail = `https://img.youtube.com/vi/${id}/mqdefault.jpg`;
+      return { type, title, author, thumbnail, duration: "Video" };
+    }
+
+    if (type === "github") {
+      const parsed = parseGithubUrl(url);
+      if (!parsed) throw new Error("Invalid GitHub URL");
+      const { owner, repo } = parsed;
+
+      try {
+        const repoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
+        if (!repoRes.ok) throw new Error("Fetch failed");
+        const repoData = (await repoRes.json()) as any;
+
+        return {
+          type,
+          title: `${owner}/${repo}`,
+          stars: repoData.stargazers_count || 0,
+          primaryLanguage: repoData.language || "Unknown",
+          description: repoData.description || "GitHub Repository",
+        };
+      } catch {
+        return {
+          type,
+          title: `${owner}/${repo}`,
+          stars: 0,
+          primaryLanguage: "Unknown",
+          description: "GitHub Repository",
+        };
+      }
+    }
+
+    throw new Error("Invalid type");
+  });
+

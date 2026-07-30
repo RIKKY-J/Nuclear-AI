@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import type { SummaryResponse } from "@/services/api";
 import type { SummarizeInput } from "./summarize.functions";
+import {
+  getHistoryListFn,
+  toggleFavoriteFn,
+  deleteSummaryFn,
+  clearUserHistoryFn,
+  syncAnonymousHistoryFn,
+} from "./history.functions";
+import { getCurrentUserFn } from "./auth.functions";
 
 export interface HistoryItem {
   id: string;
@@ -14,12 +22,13 @@ export interface HistoryItem {
     medium?: SummaryResponse;
     detailed?: SummaryResponse;
   };
+  favorite?: boolean;
 }
 
 const KEY = "nuclear:history";
 const listeners = new Set<() => void>();
 
-function read(): HistoryItem[] {
+function readLocal(): HistoryItem[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = sessionStorage.getItem(KEY);
@@ -29,7 +38,8 @@ function read(): HistoryItem[] {
   }
 }
 
-function write(items: HistoryItem[]) {
+function writeLocal(items: HistoryItem[]) {
+  if (typeof window === "undefined") return;
   sessionStorage.setItem(KEY, JSON.stringify(items));
   listeners.forEach((l) => l());
 }
@@ -39,9 +49,10 @@ export function addHistory(
   input: SummarizeInput,
   length: "short" | "medium" | "detailed",
   preview: string,
+  serverGeneratedId?: string,
 ): HistoryItem {
   const item: HistoryItem = {
-    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    id: serverGeneratedId || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     createdAt: Date.now(),
     preview: preview.slice(0, 140),
     response,
@@ -50,41 +61,87 @@ export function addHistory(
     summaries: {
       [length]: response,
     },
+    favorite: false,
   };
-  write([item, ...read()].slice(0, 50));
+  writeLocal([item, ...readLocal()].slice(0, 50));
   return item;
 }
 
 export function updateHistoryItem(id: string, updates: Partial<HistoryItem>) {
-  const items = read();
+  const items = readLocal();
   const index = items.findIndex((x) => x.id === id);
   if (index !== -1) {
     items[index] = { ...items[index], ...updates };
-    write(items);
+    writeLocal(items);
   }
 }
 
 export function getHistoryItem(id: string): HistoryItem | undefined {
-  return read().find((x) => x.id === id);
+  return readLocal().find((x) => x.id === id);
 }
 
-export function removeHistory(id: string) {
-  write(read().filter((x) => x.id !== id));
+export async function removeHistory(id: string) {
+  writeLocal(readLocal().filter((x) => x.id !== id));
+  try {
+    await deleteSummaryFn({ id });
+  } catch (e) {
+    console.error("Could not delete from server", e);
+  }
 }
 
-export function clearHistory() {
-  write([]);
+export async function clearHistory() {
+  writeLocal([]);
+  try {
+    await clearUserHistoryFn();
+  } catch (e) {
+    console.error("Could not clear user history from server", e);
+  }
 }
 
 export function useHistory(): HistoryItem[] {
   const [items, setItems] = useState<HistoryItem[]>([]);
+  const [user, setUser] = useState<any>(null);
+
+  const refreshHistory = async () => {
+    try {
+      const activeUser = await getCurrentUserFn();
+      setUser(activeUser);
+
+      if (activeUser) {
+        // Sync any anonymous local history first
+        const localItems = readLocal();
+        const anonymousIds = localItems.map((item) => item.id);
+        if (anonymousIds.length > 0) {
+          await syncAnonymousHistoryFn({ ids: anonymousIds });
+          // Clear local storage after successful sync to avoid duplicated listing
+          sessionStorage.removeItem(KEY);
+        }
+
+        const serverItems = await getHistoryListFn();
+        setItems(serverItems as HistoryItem[]);
+      } else {
+        setItems(readLocal());
+      }
+    } catch (e) {
+      console.error(e);
+      setItems(readLocal());
+    }
+  };
+
   useEffect(() => {
-    const update = () => setItems(read());
-    listeners.add(update);
-    update();
-    return () => {
-      listeners.delete(update);
+    refreshHistory();
+
+    const handleUpdate = () => {
+      if (!user) {
+        setItems(readLocal());
+      }
     };
-  }, []);
+
+    listeners.add(handleUpdate);
+    return () => {
+      listeners.delete(handleUpdate);
+    };
+  }, [user]);
+
   return items;
 }

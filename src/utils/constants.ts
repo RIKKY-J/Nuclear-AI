@@ -3,11 +3,12 @@ import {
   FileText,
   Globe,
   FileType,
-  FileCode2,
   FileDown,
   Hash,
   Code2,
   Youtube,
+  Github,
+  Mic,
 } from "lucide-react";
 
 export type SourceType =
@@ -18,13 +19,15 @@ export type SourceType =
   | "txt"
   | "markdown"
   | "html"
-  | "youtube";
+  | "youtube"
+  | "github"
+  | "audio";
 
 export interface SourceConfig {
   id: SourceType;
   label: string;
   icon: LucideIcon;
-  kind: "text" | "url" | "file" | "youtube";
+  kind: "text" | "url" | "file" | "youtube" | "github" | "audio";
   accept?: string;
   extensions?: string[];
 }
@@ -38,6 +41,8 @@ export const SOURCES: SourceConfig[] = [
   { id: "markdown", label: "Markdown", icon: Hash, kind: "file", accept: ".md,.markdown", extensions: [".md", ".markdown"] },
   { id: "html", label: "HTML", icon: Code2, kind: "file", accept: ".html,.htm", extensions: [".html", ".htm"] },
   { id: "youtube", label: "YouTube", icon: Youtube, kind: "youtube" },
+  { id: "github", label: "GitHub", icon: Github, kind: "url" },
+  { id: "audio", label: "Audio", icon: Mic, kind: "file", accept: ".mp3,.wav,.m4a,.webm,.ogg", extensions: [".mp3", ".wav", ".m4a", ".webm", ".ogg"] },
 ];
 
 export const TEXT_MIN = 20;

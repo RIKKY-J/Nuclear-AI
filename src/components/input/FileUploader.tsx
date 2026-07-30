@@ -62,9 +62,9 @@ export default function FileUploader({
         handleFile(e.dataTransfer.files?.[0] ?? null);
       }}
       className={[
-        "flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed py-12 px-6 text-center cursor-pointer transition-colors",
+        "flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed py-12 px-6 text-center cursor-pointer transition-all duration-200",
         dragOver
-          ? "border-primary bg-primary/5"
+          ? "border-primary bg-primary/10 shadow-[0_0_20px_rgba(139,92,246,0.15)] ring-1 ring-primary/30 scale-[1.01]"
           : "border-border bg-panel/40 hover:bg-panel/70",
       ].join(" ")}
     >
@@ -72,11 +72,18 @@ export default function FileUploader({
         ref={inputRef}
         type="file"
         accept={source.accept}
+        multiple
         className="sr-only"
-        onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
+        onChange={(e) => {
+          const files = e.target.value ? Array.from(e.target.files ?? []) : [];
+          if (files.length > 1) {
+            toast.info(`Uploaded ${files.length} files. Batch mode will process them.`);
+          }
+          handleFile(files[0] ?? null);
+        }}
       />
       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-        <UploadCloud className="h-6 w-6" />
+        <UploadCloud className="h-6 w-6 animate-bounce" style={{ animationDuration: '3s' }} />
       </div>
       <div>
         <div className="font-medium">Drop your {source.label} file here</div>

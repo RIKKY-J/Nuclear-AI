@@ -22,6 +22,11 @@ export function useSummarizer() {
   const [result, setResult] = useState<SummaryResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Phase 2 customization states
+  const [mode, setMode] = useState<"standard" | "study" | "code">("standard");
+  const [studySubmode, setStudySubmode] = useState<"notes" | "flashcards" | "qa">("notes");
+  const [customLens, setCustomLens] = useState("");
+
   const changeSource = useCallback((s: SourceType) => {
     setSource(s);
     setError(null);
@@ -35,6 +40,9 @@ export function useSummarizer() {
     setWebsiteUrl("");
     setYoutubeUrl("");
     setFile(null);
+    setMode("standard");
+    setStudySubmode("notes");
+    setCustomLens("");
   }, []);
 
   const canSubmit = (() => {
@@ -48,7 +56,7 @@ export function useSummarizer() {
 
   const submit = useCallback(async (
     length: "short" | "medium" | "detailed" = "medium",
-  ): Promise<{ response: SummaryResponse; input: SummarizeInput } | null> => {
+  ): Promise<{ id: string; response: SummaryResponse; input: SummarizeInput } | null> => {
     const cfg = SOURCES.find((s) => s.id === source)!;
     let payload: SummarizePayload | null = null;
     let vErr: string | null = null;
@@ -56,6 +64,13 @@ export function useSummarizer() {
     if (cfg.kind === "text") {
       vErr = validateText(text);
       if (!vErr) payload = { type: "text", text: text.trim() };
+    } else if (cfg.id === "github") {
+      if (!websiteUrl.toLowerCase().includes("github.com")) {
+        vErr = "Please enter a valid GitHub repository URL.";
+      } else {
+        vErr = validateUrl(websiteUrl);
+      }
+      if (!vErr) payload = { type: "github", url: websiteUrl.trim() };
     } else if (cfg.kind === "url") {
       vErr = validateUrl(websiteUrl);
       if (!vErr) payload = { type: "website", url: websiteUrl.trim() };
@@ -63,9 +78,14 @@ export function useSummarizer() {
       vErr = validateYouTubeUrl(youtubeUrl);
       if (!vErr) payload = { type: "youtube", url: youtubeUrl.trim() };
     } else if (cfg.kind === "file") {
-      if (!file) vErr = "Please choose a file to upload.";
-      else vErr = validateFile(file, cfg);
-      if (!vErr && file) payload = { type: cfg.id as never, file };
+      if (!file) {
+        vErr = "Please choose a file to upload.";
+      } else {
+        vErr = validateFile(file, cfg);
+      }
+      if (!vErr && file) {
+        payload = { type: cfg.id as any, file };
+      }
     }
 
     if (vErr || !payload) {
@@ -78,7 +98,11 @@ export function useSummarizer() {
     setResult(null);
     setStatus("loading");
     try {
-      const data = await summarize(payload, length);
+      const data = await summarize(payload, length, {
+        mode,
+        studySubmode,
+        customLens: customLens.trim() || undefined,
+      });
       setResult(data.response);
       setStatus("success");
       toast.success("Summary ready");
@@ -90,7 +114,7 @@ export function useSummarizer() {
       toast.error(msg);
       return null;
     }
-  }, [source, text, websiteUrl, youtubeUrl, file]);
+  }, [source, text, websiteUrl, youtubeUrl, file, mode, studySubmode, customLens]);
 
   return {
     source, changeSource,
@@ -100,5 +124,8 @@ export function useSummarizer() {
     file, setFile,
     status, result, error,
     canSubmit, submit, clear,
+    mode, setMode,
+    studySubmode, setStudySubmode,
+    customLens, setCustomLens,
   };
 }
