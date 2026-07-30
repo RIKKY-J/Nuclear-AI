@@ -1,4 +1,4 @@
-import { Atom, History } from "lucide-react";
+import { History } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import ThemeToggle from "@/components/common/ThemeToggle";
 
@@ -7,8 +7,16 @@ export default function Navbar() {
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex h-16 w-full items-center justify-between px-4 sm:px-8 lg:px-12">
         <Link to="/" className="flex items-center gap-2.5">
-          <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary">
-            <Atom className="h-5 w-5 animate-pulse-ring" />
+          <div className="relative flex h-9 w-9 items-center justify-center rounded-xl overflow-hidden bg-white border border-border/50">
+            <svg viewBox="0 0 512 512" className="h-6 w-6 text-black">
+              <circle cx="256" cy="256" r="250" fill="#ffffff" />
+              <g fill="none" stroke="#000000" strokeWidth="40" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="256" cy="256" r="46" />
+                <path d="M 228 304.5 A 56 56 0 0 0 284 304.5 L 343.5 407.6 A 175 175 0 0 1 168.5 407.6 Z" />
+                <path d="M 228 304.5 A 56 56 0 0 0 284 304.5 L 343.5 407.6 A 175 175 0 0 1 168.5 407.6 Z" transform="rotate(120 256 256)" />
+                <path d="M 228 304.5 A 56 56 0 0 0 284 304.5 L 343.5 407.6 A 175 175 0 0 1 168.5 407.6 Z" transform="rotate(240 256 256)" />
+              </g>
+            </svg>
           </div>
           <div className="leading-tight">
             <div className="font-display text-lg font-semibold tracking-tight">Nuclear AI</div>
