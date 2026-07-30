@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowLeft, Share2, Languages, MessageSquare, AlertTriangle, Code2 } from "lucide-react";
+import { ArrowLeft, Share2, Languages, AlertTriangle, Code2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
@@ -15,7 +15,7 @@ import CopyButtons from "@/components/summary/CopyButtons";
 import EmptyState from "@/components/common/EmptyState";
 import Loader from "@/components/common/Loader";
 import StudyModeCard from "@/components/summary/StudyModeCard";
-import ChatPanel from "@/components/summary/ChatPanel";
+
 
 import { getHistoryItem, removeHistory, updateHistoryItem, type HistoryItem } from "@/lib/history";
 import { summarizeFn } from "@/lib/summarize.functions";
@@ -41,12 +41,9 @@ function ResultPage() {
   const [loaded, setLoaded] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [hasShownWarning, setHasShownWarning] = useState(false);
-  const [chatOpen, setChatOpen] = useState(false);
   const [currentLang, setCurrentLang] = useState("English");
-
   useEffect(() => {
     setHasShownWarning(false);
-    setChatOpen(false);
     setCurrentLang("English");
   }, [id]);
 
@@ -215,20 +212,6 @@ function ResultPage() {
               <Share2 className="h-4 w-4" />
               <span>Share</span>
             </button>
-
-            {/* Chat Trigger Button */}
-            <button
-              onClick={() => setChatOpen(!chatOpen)}
-              className={[
-                "inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold transition-all shadow-sm",
-                chatOpen
-                  ? "bg-primary border-primary text-primary-foreground glow-primary"
-                  : "border-border bg-panel/60 text-muted-foreground hover:text-foreground hover:bg-accent/60",
-              ].join(" ")}
-            >
-              <MessageSquare className="h-4 w-4" />
-              <span>Chat</span>
-            </button>
           </div>
         )}
       </div>
@@ -313,12 +296,8 @@ function ResultPage() {
               </div>
             )}
 
-            {/* Layout Grid (Main vs Chat Panel) */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-              {/* Left Side: Summary and Highlights Content */}
-              <div
-                className={[chatOpen ? "lg:col-span-2" : "lg:col-span-3", "space-y-4"].join(" ")}
-              >
+            {/* Content Container */}
+            <div className="space-y-4">
                 <div className="relative">
                   <AnimatePresence mode="wait">
                     {isRegenerating ? (
@@ -521,17 +500,9 @@ function ResultPage() {
                   </AnimatePresence>
                 </div>
               </div>
-
-              {/* Right Side: Chat Panel Drawer */}
-              {chatOpen && (
-                <div className="lg:col-span-1 lg:sticky lg:top-20 z-10">
-                  <ChatPanel summaryId={id} onClose={() => setChatOpen(false)} />
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </main>
+            </motion.div>
+          )}
+        </main>
 
       <Footer />
       <Toaster richColors position="top-right" />
