@@ -34,7 +34,7 @@ export default function SourceTabs({
   }, []);
 
   return (
-    <div className="relative flex flex-col gap-2">
+    <div ref={dropdownRef} className="relative flex flex-col gap-2">
       <div
         role="tablist"
         aria-label="Source type"
@@ -69,7 +69,7 @@ export default function SourceTabs({
         })}
 
         {/* Overflow / More Sources Dropdown Trigger */}
-        <div ref={dropdownRef} className="relative flex-1 min-w-[120px]">
+        <div className="relative flex-1 min-w-[120px]">
           <button
             type="button"
             disabled={disabled}
@@ -96,42 +96,42 @@ export default function SourceTabs({
               )}
             />
           </button>
-
-          {/* Dropdown Menu */}
-          {isOpen && (
-            <div className="absolute right-0 top-full mt-2 z-50 w-48 rounded-xl border border-border bg-panel p-1.5 shadow-xl backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-155">
-              <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-3 py-1.5 border-b border-border/40 mb-1">
-                Other Sources
-              </div>
-              <div className="max-h-60 overflow-y-auto">
-                {overflowSources.map((s) => {
-                  const Icon = s.icon;
-                  const active = value === s.id;
-                  return (
-                    <button
-                      key={s.id}
-                      type="button"
-                      onClick={() => {
-                        onChange(s.id);
-                        setIsOpen(false);
-                      }}
-                      className={[
-                        "w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs sm:text-sm font-medium transition-colors min-h-[40px]",
-                        active
-                          ? "bg-primary text-primary-foreground font-semibold"
-                          : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
-                      ].join(" ")}
-                    >
-                      <Icon className="h-4 w-4 shrink-0" />
-                      <span>{s.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Dropdown Menu (rendered outside of the scrollable tablist wrapper to prevent clipping) */}
+      {isOpen && (
+        <div className="absolute right-0 top-full mt-2 z-50 w-48 rounded-xl border border-border bg-panel p-1.5 shadow-xl backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-155">
+          <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-3 py-1.5 border-b border-border/40 mb-1">
+            Other Sources
+          </div>
+          <div className="max-h-60 overflow-y-auto">
+            {overflowSources.map((s) => {
+              const Icon = s.icon;
+              const active = value === s.id;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => {
+                    onChange(s.id);
+                    setIsOpen(false);
+                  }}
+                  className={[
+                    "w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs sm:text-sm font-medium transition-colors min-h-[40px]",
+                    active
+                      ? "bg-primary text-primary-foreground font-semibold"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
+                  ].join(" ")}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  <span>{s.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
